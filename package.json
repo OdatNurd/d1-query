@@ -1,0 +1,37 @@
+{
+  "name": "@odatnurd/d1-query",
+  "version": "0.1.0",
+  "description": "Simple D1 query wrapper",
+  "author": "OdatNurd (https://odatnurd.net)",
+  "homepage": "https://github.com/OdatNurd/d1-query",
+  "bugs": "https://github.com/OdatNurd/d1-query/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OdatNurd/d1-query"
+  },
+  "type": "module",
+  "main": "lib/query.js",
+  "scripts": {
+    "test": "aegis \"test/**/*.test.{js,mjs}\" test/hooks.js"
+  },
+  "files": [
+    "lib/query.js"
+  ],
+  "keywords": [
+    "cloudflare",
+    "d1"
+  ],
+  "devDependencies": {
+    "@axel669/aegis": "^0.2.7",
+    "fs-jetpack": "^5.1.0",
+    "miniflare": "^3.20241230.2",
+    "node-sql-parser": "^5.3.6"
+  },
+  "packageManager": "pnpm@10.5.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "workerd"
+    ]
+  }
+}
