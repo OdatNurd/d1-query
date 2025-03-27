@@ -1,6 +1,6 @@
 {
   "name": "@odatnurd/d1-query",
-  "version": "0.1.0",
+  "version": "{{VERSION}}",
   "description": "Simple D1 query wrapper",
   "author": "OdatNurd (https://odatnurd.net)",
   "homepage": "https://github.com/OdatNurd/d1-query",
