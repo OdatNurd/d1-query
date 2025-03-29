@@ -40,8 +40,10 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org/
           cache: pnpm
+      - name: Get Package Version from Tag
+        run: echo "VERSION=$(echo $GITHUB_REF_NAME | sed -e "s/^v//")" >> $GITHUB_ENV
       - name: Update package version in control file
-        run: sed -i -e "s/{{VERSION}}/$GITHUB_REF_NAME/g" package.json
+        run: sed -i -e "s/{{VERSION}}/$VERSION/g" package.json
       - name: Install package dependencies
         run: pnpm install --frozen-lockfile
       - name: Publish package
