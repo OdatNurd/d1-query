@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@axel669/aegis':
-        specifier: ^0.2.8
-        version: 0.2.8
+        specifier: ^0.3.0
+        version: 0.3.0
       fs-jetpack:
         specifier: ^5.1.0
         version: 5.1.0
@@ -23,8 +23,8 @@ importers:
 
 packages:
 
-  '@axel669/aegis@0.2.8':
-    resolution: {integrity: sha512-pB1bOW1kfFsYCH0ue11+Obd8+1uwZGR8p21XcBfqd8MvV9bcs80WwMZ18PomUWssq6W03Ae1qt4h7O0Eq7NB0A==}
+  '@axel669/aegis@0.3.0':
+    resolution: {integrity: sha512-lJ/E02/eWV07lOZktS107Td6NjPwm5+Zj5dOapwmnfsCjVnE6ocZCIDdFFA2fw7KgkfmDg//q8hUplle16u7GQ==}
     hasBin: true
 
   '@cloudflare/workerd-darwin-64@1.20241230.0':
@@ -267,7 +267,7 @@ packages:
 
 snapshots:
 
-  '@axel669/aegis@0.2.8':
+  '@axel669/aegis@0.3.0':
     dependencies:
       fast-glob: 3.3.3
 

@@ -13,7 +13,7 @@
   "type": "module",
   "main": "lib/query.js",
   "scripts": {
-    "test": "aegis \"test/**/*.test.{js,mjs}\" test/hooks.js"
+    "test": "aegis test/aegis.config.js"
   },
   "files": [
     "lib/query.js"
@@ -23,7 +23,7 @@
     "d1"
   ],
   "devDependencies": {
-    "@axel669/aegis": "^0.2.8",
+    "@axel669/aegis": "^0.3.0",
     "fs-jetpack": "^5.1.0",
     "miniflare": "^3.20241230.2",
     "node-sql-parser": "^5.3.6"
