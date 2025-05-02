@@ -23,7 +23,7 @@
     "d1"
   ],
   "devDependencies": {
-    "@axel669/aegis": "^0.3.0",
+    "@axel669/aegis": "^0.3.1",
     "fs-jetpack": "^5.1.0",
     "miniflare": "^3.20241230.2",
     "node-sql-parser": "^5.3.6"
