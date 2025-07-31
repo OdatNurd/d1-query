@@ -12,11 +12,17 @@
   },
   "type": "module",
   "main": "lib/query.js",
+  "exports": {
+    ".": "./lib/query.js",
+    "./rollup": "./rollup/rollup-plugin-d1-sql.js"
+  },
   "scripts": {
-    "test": "aegis test/aegis.config.js"
+    "test": "aegis test/aegis.config.js",
+    "test:rollup": "rollup -c rollup/rollup.config.js"
   },
   "files": [
-    "lib/query.js"
+    "lib/query.js",
+    "rollup/rollup-plugin-d1-sql.js"
   ],
   "keywords": [
     "cloudflare",
@@ -26,7 +32,8 @@
     "@axel669/aegis": "^0.3.1",
     "fs-jetpack": "^5.1.0",
     "miniflare": "^3.20241230.2",
-    "node-sql-parser": "^5.3.6"
+    "node-sql-parser": "^5.3.6",
+    "rollup": "^4.45.1"
   },
   "packageManager": "pnpm@10.6.3",
   "pnpm": {

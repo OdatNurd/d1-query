@@ -15,6 +15,10 @@ expressive to create queries and batches of queries.
 In addition, the library does logging to help trace the queries that are being
 made, and how many rows were read and written as a part of it.
 
+Also included is a [rollup](https://rollupjs.org/) plugin that allows for
+importing SQL files directly, making it easier to bundle and use complex
+queries without them having to be in code strings.
+
 
 ## Installation
 
@@ -272,4 +276,52 @@ console.log(result);
 // Produces
 // [0ms]  fetch_users :  OK  : last_row_id=69, reads=2, writes=0, resultSize=2
 // { userId: 1, username: 'bob' }
+```
+
+## Rollup Plugin
+
+The package also includes a Rollup plugin that allows you to import a SQL file
+and have it directly wrapped in a call to `dbPrepareStatements`, allowing for
+easily handling more complex queries without them having to be inlined as
+strings in the code.
+
+To use the plugin, import it in your `rollup.config.js` file, and then include
+it in the `plugins` list:
+
+```js
+// import the plugin
+import d1sql from '@odatnurd/d1-query/rollup';
+
+export default {
+  input: 'src/main.js',
+  output: {
+    file: 'dist/index.js',
+    format: 'es',
+  },
+  plugins: [
+    // Add the plugin to the plugin list.
+    d1sql(),
+  ]
+};
+```
+
+Once you've done this, you can import SQL files directly. The result of the
+`import` is a function that takes as an argument a `D1` database handle, which
+is used to prepare the statements. You can then execute the statements using
+the normal API:
+
+
+```js
+
+// Import the desired API's, and also the SQL file to execute
+import { dbFetch } from '@odatnurd/d1-query';
+import query from './sample.sql';
+
+// query is a function; calling it gives you the prepared SQL statements, ready
+// for execution.
+//
+// The wrapper function caches the prepared statements after the first call you
+// make, allowing for faster execution if you reuse the same statements again
+// and again.
+const result = await dbFetch(ctx.env.DB, 'test_query', query(ctx.env.DB));
 ```
