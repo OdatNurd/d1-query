@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      node-sql-parser:
+        specifier: ^5.3.10
+        version: 5.3.10
     devDependencies:
       '@axel669/aegis':
         specifier: ^0.3.1
@@ -17,9 +21,6 @@ importers:
       miniflare:
         specifier: ^3.20241230.2
         version: 3.20241230.2
-      node-sql-parser:
-        specifier: ^5.3.6
-        version: 5.3.6
       rollup:
         specifier: ^4.45.1
         version: 4.46.2
@@ -310,8 +311,8 @@ packages:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
     hasBin: true
 
-  node-sql-parser@5.3.6:
-    resolution: {integrity: sha512-TXak4rIvmpL7Ap1BJQGfAGewoELQGZ/Rf9YYt9rKz73ykDp3HNnXT08jDFC/8FjqiPoRxcPNVecSwTmjz7LrFA==}
+  node-sql-parser@5.3.10:
+    resolution: {integrity: sha512-cf+iXXJ9Foz4hBIu+eNNeg207ac6XruA9I9DXEs+jCxeS9t/k9T0GZK8NZngPwkv+P26i3zNFj9jxJU2v3pJnw==}
     engines: {node: '>=8'}
 
   picomatch@2.3.1:
@@ -606,7 +607,7 @@ snapshots:
 
   mustache@4.2.0: {}
 
-  node-sql-parser@5.3.6:
+  node-sql-parser@5.3.10:
     dependencies:
       '@types/pegjs': 0.10.6
       big-integer: 1.6.52
