@@ -34,12 +34,13 @@
   "devDependencies": {
     "@axel669/aegis": "^0.3.1",
     "fs-jetpack": "^5.1.0",
-    "miniflare": "^3.20241230.2",
+    "miniflare": "^4.20250813.0",
     "rollup": "^4.45.1"
   },
   "packageManager": "pnpm@10.6.3",
   "pnpm": {
     "onlyBuiltDependencies": [
+      "sharp",
       "workerd"
     ]
   }
