@@ -2,24 +2,23 @@
 
 
 import { readFileSync } from 'fs';
-import Parser from 'node-sql-parser';
+import { processSQLString } from '../lib/query.js';
 
 
 /******************************************************************************/
 
 
 /**
- * A Rollup plugin that allows for importing a SQL file directly in code,
- * returning a function which, when called, will return back a prepared version
- * of the statement or statements from the SQL file.
+ * A Rollup plugin that allows for importing a SQL file directly in code.
  *
- * The result of the import is a module with a default export of a function that
- * behaves as dbPrepareStatements(), except that the SQL is sourced from the
- * file that was imported.
+ * At build time, it reads the SQL file, processes it using the same logic as
+ * the main library (allowing for multiple statements), and embeds the rewritten
+ * SQL and its bind metadata into the generated module.
  *
- * The resulting function is memoized on the DB that it is called with, such
- * that if multiple files import the same SQL, or if the function is called
- * more than once, the SQL does not have to be recompiled. */
+ * The result of the import is a module with a default export of a function.
+ * When you call this function with a D1 database instance, it returns either a
+ * single prepared SQLStatement or an array of them, ready for execution.
+ */
 export default function d1sql() {
   const sqlRegex = /\.sql$/;
 
@@ -32,58 +31,48 @@ export default function d1sql() {
         return null;
       }
 
-      // Read the SQL file and parse it into an Abstract Syntax Tree. This is
-      // the same mechanism used by the test suite to load SQL for execution,
-      // and ensures at compile time that the SQL is correct while also getting
-      // around D1's potential issues with being confused by comments or
-      // multiple statements in the input SQL.
-      //
-      // The output of astify is either a list of statements or just a single
-      // statement, where each statement is an object. It transpires that what
-      // makes statements is a semicolon, but the parser is not smart enough to
-      // notice when a statement is empty, so you may or may not get an array
-      // for a single statement depending on whether or not you put a semicolon
-      // on the end of it.
+      // Read the entire file content as a single string.
       const fileContent = readFileSync(id, 'utf8');
-      const parser = new Parser.Parser();
-      let ast = parser.astify(fileContent, { database: "SQLite" });
-      if (Array.isArray(ast) === false) {
-        ast = [ast];
-      }
 
-      // We can put each statement back into a SQL string now.
-      const statements = ast.map(statement => {
-        return parser.sqlify(statement, { database: "SQLite" });
-      });
+      // Using the internal handler, process the SQL into a series of objects
+      // Process the SQL, allowing for multiple statements. This will return an
+      // array of objects, each with the rewritten SQL and its bind metadata.
+      const processedStatements = processSQLString(fileContent, true);
 
-      // Generate the code for the module.
+      // Generate the code for the module that will be imported by the user.
       const code = `
-import { dbPrepareStatements } from '@odatnurd/d1-query';
+import { SQLStatement } from '@odatnurd/d1-query';
 
 // A cache to store prepared statements, keyed by the DB instance.
 const cache = new Map();
 
-// The list of raw SQL statements.
-const statements = ${JSON.stringify(statements)};
+// The processed statements and their metadata, embedded at build time.
+const processedStatements = ${JSON.stringify(processedStatements, null, 2)};
 
 /**
- * Given a D1 Database object, prepare the statements from the imported
- * SQL file.
- *
- * The results are cached, so subsequent calls with the same DB object
- * will return the same prepared statements without recompiling.
+ * Given a D1 Database object, prepares the statements from the imported
+ * SQL file. The results are cached for performance.
  */
 export default (db) => {
   // If we've already prepared these statements for this DB, return from cache.
-  if (cache.has(db) === true) {
+  if (cache.has(db)) {
     return cache.get(db);
   }
 
-  // Otherwise, prepare the statements, cache them, and then return them.
-  const prepared = dbPrepareStatements(db, ...statements);
-  cache.set(db, prepared);
+  // For each processed statement, prepare it with D1 and wrap it in our custom
+  // SQLStatement class with its corresponding metadata; this mimics the
+  // API that prepares statements.
+  const statements = processedStatements.map(info => {
+    const prepared = db.prepare(info.sql);
+    return new SQLStatement(prepared, info.bindMetadata);
+  });
 
-  return prepared;
+  // If the original file had only one statement, return a single object
+  // to match the behavior of dbPrepareStatements. Otherwise, return the array.
+  const result = statements.length === 1 ? statements[0] : statements;
+
+  cache.set(db, result);
+  return result;
 };
 `;
 

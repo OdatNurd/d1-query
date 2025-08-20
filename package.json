@@ -13,7 +13,7 @@
   "type": "module",
   "main": "lib/query.js",
   "exports": {
-    ".": "./lib/query.js",
+    ".": "./lib/index.js",
     "./rollup": "./rollup/rollup-plugin-d1-sql.js"
   },
   "scripts": {
@@ -21,7 +21,7 @@
     "test:rollup": "rollup -c rollup/rollup.config.js"
   },
   "files": [
-    "lib/query.js",
+    "lib",
     "rollup/rollup-plugin-d1-sql.js"
   ],
   "keywords": [

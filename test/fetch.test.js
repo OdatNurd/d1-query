@@ -43,7 +43,7 @@ export default Collection`Simple Fetch Queries`({
     // values.
     await $check`INSERT two rows as batch`
       .value(dbFetch(ctx.db, 'raw_test_four' ,
-        'INSERT INTO Users VALUES(?1, ?2, ?3);',
+        'INSERT INTO Users VALUES(?, ?, ?);',
           [81, "jimbo", 1],
           [82, "frankbert", false],
         ))
@@ -56,7 +56,7 @@ export default Collection`Simple Fetch Queries`({
     // be returned since it is inserting prior to selecting.
     await $check`INSERT/SELECT as a batch`
       .value(dbFetch(ctx.db, 'raw_test_five' ,
-        'INSERT INTO Users VALUES(?1, ?2, ?3);',
+        'INSERT INTO Users VALUES(?, ?, ?);',
           [83, "bohjimbo", 0],
           'SELECT * FROM Users WHERE userId = 83;',
         ))
@@ -72,7 +72,7 @@ export default Collection`Simple Fetch Queries`({
     await $check`SELECT/INSERT as a batch`
       .value(dbFetch(ctx.db, 'raw_test_six' ,
         'SELECT * FROM Users WHERE userId = 84;',
-        'INSERT INTO Users VALUES(?1, ?2, ?3);',
+        'INSERT INTO Users VALUES(?, ?, ?);',
           [84, "jimbozo", true],
         ))
       .isArray()
@@ -84,7 +84,7 @@ export default Collection`Simple Fetch Queries`({
     // already exists; as a result this should fail.
     await $check`INSERT new data and try to reinsert old data`
       .call(async () => dbFetch(ctx.db, 'raw_test_seven' ,
-        'INSERT INTO Users VALUES(?1, ?2, ?3);',
+        'INSERT INTO Users VALUES(?, ?, ?);',
           [85, "neverseeme", true],
           [83, "bohjimbo", 0],
         ))
@@ -158,7 +158,7 @@ export default Collection`Simple Fetch Queries`({
     // does not result in any data, such as an insert.
     await $check`Fetch of an insert statement`
       .value(dbFetchOne(ctx.db, 'fetch1_test_four',
-               'INSERT INTO Users VALUES(?1, ?2, ?3);',
+               'INSERT INTO Users VALUES(?, ?, ?);',
                  [91, "jimbo", 1]))
       .isNotArray()
       .eq($, null);
@@ -182,7 +182,7 @@ export default Collection`Simple Fetch Queries`({
     // empty array.
     await $check`Fetch of a batch of inserts`
       .value(dbFetchOne(ctx.db, 'fetch1_test_six',
-               'INSERT INTO Users VALUES(?1, ?2, ?3);',
+               'INSERT INTO Users VALUES(?, ?, ?);',
                  [101, "jimbo", 1],
                  [102, "frankbert", false]))
       .isArray()
