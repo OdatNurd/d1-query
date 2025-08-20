@@ -29,7 +29,7 @@
     "d1"
   ],
   "dependencies": {
-    "node-sql-parser": "^5.3.10"
+    "node-sql-parser": "^5.3.11"
   },
   "devDependencies": {
     "@axel669/aegis": "^0.3.1",

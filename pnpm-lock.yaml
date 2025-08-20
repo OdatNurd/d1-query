@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       node-sql-parser:
-        specifier: ^5.3.10
-        version: 5.3.10
+        specifier: ^5.3.11
+        version: 5.3.11
     devDependencies:
       '@axel669/aegis':
         specifier: ^0.3.1
@@ -431,8 +431,8 @@ packages:
     resolution: {integrity: sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==}
     engines: {node: '>=10'}
 
-  node-sql-parser@5.3.10:
-    resolution: {integrity: sha512-cf+iXXJ9Foz4hBIu+eNNeg207ac6XruA9I9DXEs+jCxeS9t/k9T0GZK8NZngPwkv+P26i3zNFj9jxJU2v3pJnw==}
+  node-sql-parser@5.3.11:
+    resolution: {integrity: sha512-1ZcXu2qEFZlMkkaYPpMoTkypTunYTvtnInzVjWDhjc1+FS5h/WqT1rbgP2pP42/nXBWfPVN66mEfidWSpYVs1Q==}
     engines: {node: '>=8'}
 
   picomatch@2.3.1:
@@ -827,7 +827,7 @@ snapshots:
     dependencies:
       brace-expansion: 2.0.1
 
-  node-sql-parser@5.3.10:
+  node-sql-parser@5.3.11:
     dependencies:
       '@types/pegjs': 0.10.6
       big-integer: 1.6.52
