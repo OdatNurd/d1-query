@@ -64,6 +64,7 @@ export const config = {
         "test/compiler.test.js",
         "test/raw_query.test.js",
         "test/fetch.test.js",
+        "test/rollup.test.js",
     ],
     hooks: {
         async setup(ctx) {
@@ -92,7 +93,7 @@ export const config = {
     // Can be set to "afterSection" or "afterCollection" to have the test suite
     // exit as soon as a check fails in a section or collection. Default of
     // "ignore" runs all tests without stopping on failures.
-    failAction: "afterCollection",
+    failAction: "afterSection",
 }
 
 
