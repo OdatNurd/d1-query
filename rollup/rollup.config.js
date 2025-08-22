@@ -1,9 +1,9 @@
 import d1sql from './rollup-plugin-d1-sql.js';
 
 export default {
-  input: 'rollup/test.js',
+  input: 'rollup/sqlTest.js',
   output: {
-    file: 'rollup/output/test.js',
+    file: 'rollup/output/sqlTest.js',
     format: 'es',
   },
   external: [
