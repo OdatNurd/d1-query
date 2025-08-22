@@ -17,12 +17,14 @@
     "./rollup": "./rollup/rollup-plugin.js"
   },
   "scripts": {
-    "test": "aegis test/aegis.config.js",
-    "test:rollup": "rollup -c rollup/rollup.config.js"
+    "test": "aegis test/aegis.config.js"
   },
   "files": [
     "lib",
-    "rollup/rollup-plugin-d1-sql.js"
+    "rollup/rollup-plugin-d1-sql.js",
+    "rollup/rollup-plugin-helper.js",
+    "LICENSE",
+    "LICENCE-node-sql-parser"
   ],
   "keywords": [
     "cloudflare",
