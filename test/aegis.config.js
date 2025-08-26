@@ -2,7 +2,7 @@ import { addCheck } from "@axel669/aegis"
 
 import { Miniflare } from "miniflare";
 
-import Parser from 'node-sql-parser';
+import { Parser } from '../lib/sqlite.js';
 import fs from 'fs-jetpack';
 
 
@@ -36,13 +36,13 @@ async function setupTestDatabase(ctx, sqlFilename) {
 
   // Create a SQL parser that knows that it's dealing with the SQLite dialect of
   // SQL and parse the input file with it.
-  const parser = new Parser.Parser();
-  const ast = parser.astify(setup, { database: "SQLite" });
+  const parser = new Parser();
+  const ast = parser.astify(setup);
 
   // For each statement, execute it, so that the database is set up as per the
   // tests.
   for (const statement of ast) {
-    const sql = parser.sqlify(statement, { database: "SQLite" });
+    const sql = parser.sqlify(statement);
     console.log(`> ${sql}`);
     await ctx.db.exec(sql);
   }
