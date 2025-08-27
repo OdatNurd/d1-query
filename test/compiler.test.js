@@ -140,7 +140,7 @@ export default Collection`Statement Compilation`({
     // sections, so here we only need to test one situation here.
     $check`Function arg is not SQL,pre-compiled statement or bind args`
       .call(() => dbPrepareStatements(ctx.db, 69))
-      .throws($, 'must provide SQL strings or previously compiled statements');
+      .throws($, 'arguments must be SQL strings, SQLStatement instances, or bind values (arrays/objects)');
   },
 });
 
