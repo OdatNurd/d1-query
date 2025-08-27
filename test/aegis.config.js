@@ -19,6 +19,12 @@ addCheck.value.isNotArray(
     source => Array.isArray(source) === false
 );
 
+/* Include a custom check that verifies that an object has a specific number of
+ * keys. */
+addCheck.value.keyCount(
+  (object, length) => Object.keys(object).length === length
+);
+
 
 /******************************************************************************/
 
@@ -54,6 +60,7 @@ async function setupTestDatabase(ctx, sqlFilename) {
 
 export const config = {
     files: [
+        "test/sqlparser.test.js",
         "test/compiler.test.js",
         "test/raw_query.test.js",
         "test/fetch.test.js",

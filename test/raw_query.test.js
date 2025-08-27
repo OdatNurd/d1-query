@@ -128,7 +128,7 @@ export default Collection`Raw Data Queries`({
     // Selecting with no statement should fail.
     await $check`SELECT with an undefined statement`
       .value(dbRawQuery(ctx.db, undefined, 'raw_fail_test_one'))
-      .throws($, "Cannot read properties of undefined (reading 'all')");
+      .throws($, "Cannot read properties of undefined (reading 'statement')");
 
     // With more than one undefined statement, the error changes because it is
     // a batch and is handled differently.
@@ -139,7 +139,7 @@ export default Collection`Raw Data Queries`({
     // Selecting with a null statement should fail too.
     await $check`SELECT with a null statement`
       .value(dbRawQuery(ctx.db, null, 'raw_fail_test_three'))
-      .throws($, "Cannot read properties of null (reading 'all')");
+      .throws($, "Cannot read properties of null (reading 'statement')");
 
     // Selecting with a null statement should fail too.
     await $check`Batch of null statements`
@@ -175,10 +175,10 @@ export default Collection`Raw Data Queries`({
 
     // Selecting where the statement consists of invalid SQL.
     await $check`Query with invalid SQL`
-      .value(dbRawQuery(ctx.db,
+      .call(() => dbRawQuery(ctx.db,
         dbPrepareStatements(ctx.db, 'SELUCT * FROM Users WHERE userId = 1;'),
         'raw_fail_test_eight'))
-      .throws($, 'D1_ERROR: near "SELUCT": syntax error at offset 0: SQLITE_ERROR');
+      .throws($, 'invalid SQL syntax');
 
     // Selecting where the SQL is valid but the statement is not should flag an
     // error.
@@ -197,16 +197,16 @@ export default Collection`Raw Data Queries`({
 
     // Same test as above, but testing with too many instead of too few.
     await $check`Statement with too many bind arguments`
-      .value(dbRawQuery(ctx.db,
+      .call(() => dbRawQuery(ctx.db,
         dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = ?;', [1, 2]),
         'raw_fail_test_eleven'))
-      .throws($, 'D1_ERROR: Wrong number of parameter bindings for SQL query.');
+      .throws($, 'incorrect number of bind parameters; expected 1, got 2');
 
     // Same test as above, but testing with args then none are required.
     await $check`Statement with bind arguments when not required`
-      .value(dbRawQuery(ctx.db,
+      .call(() => dbRawQuery(ctx.db,
         dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = 1;', [1, 2]),
         'raw_fail_test_eleven'))
-      .throws($, 'D1_ERROR: Wrong number of parameter bindings for SQL query.');
+      .throws($, 'statement does not accept any bind parameters');
   },
 });

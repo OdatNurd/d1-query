@@ -13,15 +13,15 @@
   "type": "module",
   "main": "lib/query.js",
   "exports": {
-    ".": "./lib/query.js",
-    "./rollup": "./rollup/rollup-plugin-d1-sql.js"
+    ".": "./lib/index.js",
+    "./rollup": "./rollup/rollup-plugin.js"
   },
   "scripts": {
     "test": "aegis test/aegis.config.js",
     "test:rollup": "rollup -c rollup/rollup.config.js"
   },
   "files": [
-    "lib/query.js",
+    "lib",
     "rollup/rollup-plugin-d1-sql.js"
   ],
   "keywords": [
