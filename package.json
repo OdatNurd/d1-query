@@ -14,7 +14,8 @@
   "main": "lib/query.js",
   "exports": {
     ".": "./lib/index.js",
-    "./rollup": "./rollup/rollup-plugin.js"
+    "./rollup": "./rollup/rollup-plugin.js",
+    "./aegis": "./aegis/index.js"
   },
   "scripts": {
     "test": "aegis test/aegis.config.js"
@@ -22,6 +23,7 @@
   "files": [
     "lib",
     "rollup",
+    "aegis",
     "LICENSE",
     "LICENCE-node-sql-parser"
   ],
@@ -34,6 +36,22 @@
     "fs-jetpack": "^5.1.0",
     "miniflare": "^4.20250813.0",
     "rollup": "^4.45.1"
+  },
+  "peerDependencies": {
+    "@axel669/aegis": "^0.3.1",
+    "miniflare": "^4.20250813.0",
+    "fs-jetpack": "^5.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@axel669/aegis": {
+      "optional": true
+    },
+    "miniflare": {
+      "optional": true
+    },
+    "fs-jetpack": {
+      "optional": true
+    }
   },
   "packageManager": "pnpm@10.15.0",
   "pnpm": {

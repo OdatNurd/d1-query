@@ -110,6 +110,7 @@ const inserts = await dbPrepareStatements(ctx.env.DB,
 
 Once you have prepared statements, you can execute them via `dbRawQuery`; this
 takes the result of a previous call to `dbPrepareStatements` and executes them.
+See the [Library Methods](#library-methods) section for more details.
 
 When given a single statement, the statement is executed and the result is
 returned back as a (potentially empty) array of objects that represent the
@@ -306,6 +307,117 @@ const result = await fetch(ctx.env.DB, 'batch_insert_users',
   { userId: 11, username: 'Bob' }
 );
 ```
+
+
+## Testing Utilities (Optional)
+
+This package includes an optional set of helpers to facilitate testing your own
+projects with the [Aegis](https://www.npmjs.com/package/@axel669/aegis) test
+runner and an in-memory D1 database powered by Miniflare.
+
+To use these utilities, you must install the required peer dependencies into
+your own project's `devDependencies` if you have not already done so.
+
+```sh
+pnpm add -D @axel669/aegis miniflare fs-jetpack
+```
+
+The `@odatnurd/d1-query/aegis` module exports the following helper functions:
+
+### Helper Functions
+
+```javascript
+export function initializeD1Checks() {}
+```
+Registers all [custom checks](#custom-checks) with Aegis. This should be called
+once at the top of your `aegis.config.js` file.
+
+---
+
+```javascript
+export async function aegisSetup(ctx, sqlSetupFiles = undefined, dbName = 'DB') {}
+```
+An async function to be called from the `setup` hook in your Aegis config. It
+creates a new Miniflare instance with an in-memory D1 database and, if
+provided, executes one or more SQL files to prepare the database schema and
+data.
+
+The provided Aegis scope (e.g. runScope) object will be populated with a `db`
+property that provides the database context, and a `worker` property that
+stores the Miniflare worker. You can control the Miniflare DB binding name with
+dbName if desired.
+
+You may also optionally pass either a SQL file name as a string or an array of
+SQL file names to populate the database.
+
+---
+
+```javascript
+export async function aegisTeardown(ctx) {}
+```
+An async function to be called from the `teardown` hook in your Aegis config
+that aligns with the `setup` hook. It safely disposes of the Miniflare instance
+created by `aegisSetup`.
+
+
+### Configuration
+
+You can import the helper functions into your `aegis.config.js` file to easily
+set up a test environment, optionally also populating one or more SQL files into
+the database first in order to set up testing.
+
+**Example `aegis.config.js`:**
+
+```js
+import { initializeD1Checks, aegisSetup, aegisTeardown } from '@odatnurd/d1-query/aegis';
+
+// Register the custom checks provided by the library (see below)
+initializeD1Checks();
+
+export const config = {
+    files: [
+        "test/**/*.test.js",
+    ],
+    hooks: {
+        async setup(ctx) {
+            await aegisSetup(ctx, 'test/setup.sql', 'DB');
+        },
+
+        async teardown(ctx) {
+            await aegisTeardown(ctx);
+        },
+    },
+    failAction: "afterSection",
+}
+```
+
+
+### Custom Checks
+
+The `initializeD1Checks()` function registers several custom checks with Aegis
+to simplify testing database-related logic.
+
+* `.isArray($)`: Checks if a value is an array.
+* `.isNotArray($)`: Checks if a value is not an array.
+* `.isObject($)`: Checks if a value is a plain object.
+* `.isNotObject($)`: Checks if a value is not a plain object.
+* `.keyCount($, count)`: Checks if an object has an exact number of keys.
+* `.isFunction($)`: A shortcut to check if a value is an instance of
+  `Function`.
+* `.isStatement($)`: A shortcut to check if a value is an instance of
+  `SQLStatement`.
+* `.bindType($, type)`: Assumes the value is an `SQLStatement` and checks that
+  its `bindMetadata.style` property matches the provided string
+  (e.g., `'anonymous'`, `'named'`).
+* `.argCount($, count)`: Assumes the value is an `SQLStatement` and checks that
+  its `bindMetadata.argCount` property matches the provided number.
+* `.argNames($, names)`: Assumes the value is an `SQLStatement` with named
+  parameters.
+    * If `names` is an **array**, it validates that the statement's bind
+      parameters are exactly those in the array, regardless of order.
+    * If `names` is an **object**, it validates that the statement's bind
+      parameters and their numeric positions match the keys and values of the
+      object exactly.
 
 
 ## Library Methods
