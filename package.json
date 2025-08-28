@@ -21,8 +21,7 @@
   },
   "files": [
     "lib",
-    "rollup/rollup-plugin-d1-sql.js",
-    "rollup/rollup-plugin-helper.js",
+    "rollup",
     "LICENSE",
     "LICENCE-node-sql-parser"
   ],
