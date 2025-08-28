@@ -63,19 +63,19 @@ export default Collection`Rollup Plugin`({
     // Test that the file contains the queries that we expect it to.
     $check`Query functons imported`
       .value(ctx.queries)
-      .instanceof($, Object)
-      .instanceof($.single, Function)
-      .instanceof($.single_bindable, Function)
-      .instanceof($.fetchRoles, Function)
-      .instanceof($.fetchOneRole, Function)
-      .instanceof($.executeRole, Function)
-      .instanceof($.one_bindable, Function)
-      .instanceof($.two_bindable, Function)
-      .instanceof($.three_two_bindable, Function)
-      .instanceof($.create_roles, Function)
-      .instanceof($.insert_select, Function)
-      .instanceof($.insert_role, Function)
-      .instanceof($.executeInsertRole, Function);
+      .isObject($)
+      .isFunction($.single)
+      .isFunction($.single_bindable)
+      .isFunction($.fetchRoles)
+      .isFunction($.fetchOneRole)
+      .isFunction($.executeRole)
+      .isFunction($.one_bindable)
+      .isFunction($.two_bindable)
+      .isFunction($.three_two_bindable)
+      .isFunction($.create_roles)
+      .isFunction($.insert_select)
+      .isFunction($.insert_role)
+      .isFunction($.executeInsertRole);
   },
 
 

@@ -21,107 +21,99 @@ export default Collection`Statement Preparation`({
     $check`Anonymous Bind`
       .value(processSQLString('SELECT * FROM Users WHERE userId = ? AND username = ?;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ? AND "username" = ?')
-      .eq($.bindMetadata.style, BIND_STYLE_ANONYMOUS)
-      .eq($.bindMetadata.argCount, 2);
+      .bindType($, BIND_STYLE_ANONYMOUS)
+      .argCount($, 2);
 
     // Numbered binds should be correctly identified.
     $check`Numbered binds`
       .value(processSQLString('SELECT * FROM Users WHERE userId = ?1 AND username = ?2;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?2')
-      .eq($.bindMetadata.style, BIND_STYLE_NUMBERED)
-      .eq($.bindMetadata.argCount, 2);
+      .bindType($, BIND_STYLE_NUMBERED)
+      .argCount($, 2);
 
     // Numbered binds with a gap should report the highest number as the count.
     $check`Numbered binds with a gap`
       .value(processSQLString('SELECT * FROM Users WHERE userId = ?1 AND username = ?3;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?3')
-      .eq($.bindMetadata.style, BIND_STYLE_NUMBERED)
-      .eq($.bindMetadata.argCount, 3);
+      .bindType($, BIND_STYLE_NUMBERED)
+      .argCount($, 3);
 
     // Numbered binds out of order should report the highest number as the count.
     $check`Numbered binds out of order`
       .value(processSQLString('SELECT * FROM Users WHERE userId = ?3 AND username = ?1;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?3 AND "username" = ?1')
-      .eq($.bindMetadata.style, BIND_STYLE_NUMBERED)
-      .eq($.bindMetadata.argCount, 3);
+      .bindType($, BIND_STYLE_NUMBERED)
+      .argCount($, 3);
 
     // A simple named bind should be correctly identified and mapped.
     $check`Named binds using colon`
       .value(processSQLString('SELECT * FROM Users WHERE userId = :id AND username = :name;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?2')
-      .eq($.bindMetadata.style, BIND_STYLE_NAMED)
-      .eq($.bindMetadata.params.id, 0)
-      .eq($.bindMetadata.params.name, 1);
+      .bindType($, BIND_STYLE_NAMED)
+      .argNames($, { id: 0, name: 1 });
 
     // This should also work with a $
     $check`Named binds using dollar`
       .value(processSQLString('SELECT * FROM Users WHERE userId = $id AND username = $name;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?2')
-      .eq($.bindMetadata.style, BIND_STYLE_NAMED)
-      .eq($.bindMetadata.params.id, 0)
-      .eq($.bindMetadata.params.name, 1);
+      .bindType($, BIND_STYLE_NAMED)
+      .argNames($, { id: 0, name: 1 });
 
     // This should also work with a @
     $check`Named binds using at-sign`
       .value(processSQLString('SELECT * FROM Users WHERE userId = @id AND username = @name;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?2')
-      .eq($.bindMetadata.style, BIND_STYLE_NAMED)
-      .eq($.bindMetadata.params.id, 0)
-      .eq($.bindMetadata.params.name, 1);
+      .bindType($, BIND_STYLE_NAMED)
+      .argNames($, { id: 0, name: 1 });
 
     // Anonymous binds in LIMIT and OFFSET
     $check`Anonymous binds in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT ? OFFSET ?;'))
       .eq($.sql, 'SELECT * FROM "Users" LIMIT ? OFFSET ?')
-      .eq($.bindMetadata.style, BIND_STYLE_ANONYMOUS)
-      .eq($.bindMetadata.argCount, 2);
+      .bindType($, BIND_STYLE_ANONYMOUS)
+      .argCount($, 2);
 
     // Numbered binds in LIMIT and OFFSET
     $check`Numbered binds in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT ?1 OFFSET ?2;'))
       .eq($.sql, 'SELECT * FROM "Users" LIMIT ?1 OFFSET ?2')
-      .eq($.bindMetadata.style, BIND_STYLE_NUMBERED)
-      .eq($.bindMetadata.argCount, 2);
+      .bindType($, BIND_STYLE_NUMBERED)
+      .argCount($, 2);
 
     // Named binds (colon) in LIMIT and OFFSET
     $check`Named binds (colon) in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT :count OFFSET :start;'))
       .eq($.sql, 'SELECT * FROM "Users" LIMIT ?1 OFFSET ?2')
-      .eq($.bindMetadata.style, BIND_STYLE_NAMED)
-      .eq($.bindMetadata.params.count, 0)
-      .eq($.bindMetadata.params.start, 1);
+      .bindType($, BIND_STYLE_NAMED)
+      .argNames($, { count: 0, start: 1 });
 
     // Named binds (dollar) in LIMIT and OFFSET
     $check`Named binds (dollar) in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT $count OFFSET $start;'))
       .eq($.sql, 'SELECT * FROM "Users" LIMIT ?1 OFFSET ?2')
-      .eq($.bindMetadata.style, BIND_STYLE_NAMED)
-      .eq($.bindMetadata.params.count, 0)
-      .eq($.bindMetadata.params.start, 1);
+      .bindType($, BIND_STYLE_NAMED)
+      .argNames($, { count: 0, start: 1 });
 
     // Named binds (at-sign) in LIMIT and OFFSET
     $check`Named binds (at-sign) in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT @count OFFSET @start;'))
       .eq($.sql, 'SELECT * FROM "Users" LIMIT ?1 OFFSET ?2')
-      .eq($.bindMetadata.style, BIND_STYLE_NAMED)
-      .eq($.bindMetadata.params.count, 0)
-      .eq($.bindMetadata.params.start, 1);
+      .bindType($, BIND_STYLE_NAMED)
+      .argNames($, { count: 0, start: 1 });
 
     // Repeated named binds should result in a single parameter entry in the metadata.
     $check`Repeated named binds using colon`
       .value(processSQLString('SELECT * FROM Users WHERE userId = :id AND username = :id;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?1')
-      .eq($.bindMetadata.style, BIND_STYLE_NAMED)
-      .keyCount($.bindMetadata.params, 1)
-      .eq($.bindMetadata.params.id, 0);
+      .bindType($, BIND_STYLE_NAMED)
+      .argNames($, ['id']);
 
     // This should also work if we use a dollar sign.
     $check`Repeated named binds using dollar`
       .value(processSQLString('SELECT * FROM Users WHERE userId = $id AND username = $id;'))
       .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?1')
-      .eq($.bindMetadata.style, BIND_STYLE_NAMED)
-      .keyCount($.bindMetadata.params, 1)
-      .eq($.bindMetadata.params.id, 0);
+      .bindType($, BIND_STYLE_NAMED)
+      .argNames($, ['id']);
 
     // Mixing anonymous and named binds should throw an error.
     $check`Mixing anonymous and named binds using colon`
