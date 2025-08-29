@@ -4,12 +4,21 @@ on:
   push:
     tags:
       - v*
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The tag to release, e.g., v1.2.3'
+        required: true
 
 jobs:
   publish-npm-package-after-testing:
-    uses: odatnurd/github-workflows/.github/workflows/npm-publish.yaml@master
+    permissions:
+      contents: write
+    uses: odatnurd/github-workflows/.github/workflows/npm-publish.yaml@npm-publish-v1.0.0
     with:
       node-version: 20
-      package-version: $GITHUB_REF_NAME
+      package-version: ${{ (github.event_name == 'workflow_dispatch' && inputs.tag) || github.ref_name }}
+      create-release: true
+      test-script: 'test'
     secrets:
       npm-auth-token: ${{ secrets.NPM_PUBLISH }}
