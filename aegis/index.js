@@ -4,6 +4,7 @@
 import { addCheck } from '@axel669/aegis';
 import { Miniflare } from 'miniflare';
 import { Parser } from '../lib/sqlite.js';
+import { SQLStatement } from '../lib/statement.js';
 import fs from 'fs-jetpack';
 
 
