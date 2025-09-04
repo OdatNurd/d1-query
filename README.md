@@ -313,13 +313,14 @@ const result = await fetch(ctx.env.DB, 'batch_insert_users',
 
 This package includes an optional set of helpers to facilitate testing your own
 projects with the [Aegis](https://www.npmjs.com/package/@axel669/aegis) test
-runner and an in-memory D1 database powered by Miniflare.
+runner and the [@odatnurd/cf-aegis](https://www.npmjs.com/package/@odatnurd/cf-aegis)
+package.
 
 To use these utilities, you must install the required peer dependencies into
 your own project's `devDependencies` if you have not already done so.
 
 ```sh
-pnpm add -D @axel669/aegis miniflare fs-jetpack
+pnpm add -D @axel669/aegis @odatnurd/cf-aegis miniflare fs-jetpack
 ```
 
 The `@odatnurd/d1-query/aegis` module exports the following helper functions:
@@ -335,30 +336,14 @@ once at the top of your `aegis.config.js` file.
 ---
 
 ```javascript
-export async function aegisSetup(ctx, sqlSetupFiles = undefined, dbName = 'DB') {}
+export async function execSQLFiles(db, sqlFiles = undefined) {}
 ```
-An async function to be called from the `setup` hook in your Aegis config. It
-creates a new Miniflare instance with an in-memory D1 database and, if
-provided, executes one or more SQL files to prepare the database schema and
-data.
-
-The provided Aegis scope (e.g. runScope) object will be populated with a `db`
-property that provides the database context, and a `worker` property that
-stores the Miniflare worker. You can control the Miniflare DB binding name with
-dbName if desired.
-
-You may also optionally pass either a SQL file name as a string or an array of
-SQL file names to populate the database.
+An async function that takes a database context from a Cloudflare worker and
+either the filename of a single SQL file, or an array of SQL filenames. It will
+read and execute each SQL file given in turn, raising an error if an error
+occurs.
 
 ---
-
-```javascript
-export async function aegisTeardown(ctx) {}
-```
-An async function to be called from the `teardown` hook in your Aegis config
-that aligns with the `setup` hook. It safely disposes of the Miniflare instance
-created by `aegisSetup`.
-
 
 ### Configuration
 
@@ -369,9 +354,11 @@ the database first in order to set up testing.
 **Example `aegis.config.js`:**
 
 ```js
-import { initializeD1Checks, aegisSetup, aegisTeardown } from '@odatnurd/d1-query/aegis';
+import { initializeCustomChecks, aegisSetup, aegisTeardown } from '@odatnurd/cf-aegis';
 
-// Register the custom checks provided by the library (see below)
+import { initializeD1Checks, execSQLFiles } from '@odatnurd/d1-query/aegis';
+
+initializeCustomChecks();
 initializeD1Checks();
 
 export const config = {
@@ -380,7 +367,8 @@ export const config = {
     ],
     hooks: {
         async setup(ctx) {
-            await aegisSetup(ctx, 'test/setup.sql', 'DB');
+            await aegisSetup(ctx, 'DB');
+            await execSQLFiles(ctx.db, 'test/setup.sql');
         },
 
         async teardown(ctx) {
