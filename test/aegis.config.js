@@ -1,13 +1,15 @@
 /******************************************************************************/
 
 
-import { initializeD1Checks, aegisSetup, aegisTeardown } from "../aegis/index.js";
+import { initializeCustomChecks, aegisSetup, aegisTeardown } from "@odatnurd/cf-aegis";
 
+import { initializeD1Checks, execSQLFiles } from "../aegis/index.js";
 
 /******************************************************************************/
 
 
 // Initialize custom Aegis checks for this test suite.
+initializeCustomChecks();
 initializeD1Checks();
 
 
@@ -23,7 +25,10 @@ export const config = {
     "test/rollup.test.js",
   ],
   hooks: {
-    setup: async (ctx) => aegisSetup(ctx, 'test/setup.sql'),
+    setup: async (ctx) => {
+      await aegisSetup(ctx);
+      await execSQLFiles(ctx.db, 'test/setup.sql')
+    },
     teardown: async (ctx) => aegisTeardown(ctx),
   },
 
