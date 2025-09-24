@@ -60,6 +60,12 @@
     },
     "fs-jetpack": {
       "optional": true
+    },
+    "json5": {
+      "optional": true
+    },
+    "miniflare": {
+      "smol-toml": true
     }
   },
   "packageManager": "pnpm@10.15.1",
