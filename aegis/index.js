@@ -16,36 +16,7 @@ import fs from 'fs-jetpack';
  * This is entirely optional.
  */
 export function initializeD1Checks() {
-  // Check that a value is an array.
-  addCheck.value.isArray(
-      source => Array.isArray(source) === true
-  );
-
-  // Check that a value is NOT an array.
-  addCheck.value.isNotArray(
-      source => Array.isArray(source) === false
-  );
-
-  // Check that a value is a plain object.
-  addCheck.value.isObject(
-    source => source !== null && typeof source === 'object' && source.constructor === Object
-  );
-
-  // Check that a value is NOT a plain object.
-  addCheck.value.isNotObject(
-    source => source === null || typeof source !== 'object' || source.constructor !== Object
-  );
-  // Check that a value is an object that has a specific number of keys.
-  addCheck.value.keyCount(
-    (object, length) => Object.keys(object).length === length
-  );
-
-  // Check that a value is a function.
-  addCheck.value.isFunction(
-    source => source instanceof Function
-  );
-
-  // Check that a value is an intance of SQLStatement
+  // Check that a value is an instance of SQLStatement
   addCheck.value.isStatement(
     source => source instanceof SQLStatement
   );

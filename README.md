@@ -320,7 +320,7 @@ To use these utilities, you must install the required peer dependencies into
 your own project's `devDependencies` if you have not already done so.
 
 ```sh
-pnpm add -D @axel669/aegis @odatnurd/cf-aegis miniflare fs-jetpack
+pnpm add -D @axel669/aegis @odatnurd/cf-aegis miniflare fs-jetpack smol-toml json5
 ```
 
 The `@odatnurd/d1-query/aegis` module exports the following helper functions:
@@ -367,8 +367,16 @@ export const config = {
     ],
     hooks: {
         async setup(ctx) {
-            await aegisSetup(ctx, 'DB');
-            await execSQLFiles(ctx.db, 'test/setup.sql');
+          await aegisSetup(ctx, {
+            d1_databases: [
+              {
+                binding: 'DB',
+                database_name: 'test-db',
+                database_id: 'test-db-id'
+              }
+            ]
+          });
+          await execSQLFiles(ctx.env.DB, 'test/setup.sql')
         },
 
         async teardown(ctx) {
@@ -385,13 +393,6 @@ export const config = {
 The `initializeD1Checks()` function registers several custom checks with Aegis
 to simplify testing database-related logic.
 
-* `.isArray($)`: Checks if a value is an array.
-* `.isNotArray($)`: Checks if a value is not an array.
-* `.isObject($)`: Checks if a value is a plain object.
-* `.isNotObject($)`: Checks if a value is not a plain object.
-* `.keyCount($, count)`: Checks if an object has an exact number of keys.
-* `.isFunction($)`: A shortcut to check if a value is an instance of
-  `Function`.
 * `.isStatement($)`: A shortcut to check if a value is an instance of
   `SQLStatement`.
 * `.bindType($, type)`: Assumes the value is an `SQLStatement` and checks that
