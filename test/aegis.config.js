@@ -5,6 +5,7 @@ import { initializeCustomChecks, aegisSetup, aegisTeardown } from "@odatnurd/cf-
 
 import { initializeD1Checks, execSQLFiles } from "../aegis/index.js";
 
+
 /******************************************************************************/
 
 
@@ -26,8 +27,16 @@ export const config = {
   ],
   hooks: {
     setup: async (ctx) => {
-      await aegisSetup(ctx);
-      await execSQLFiles(ctx.db, 'test/setup.sql')
+      await aegisSetup(ctx, {
+        d1_databases: [
+          {
+            binding: 'DB',
+            database_name: 'test-db',
+            database_id: 'test-db-id'
+          }
+        ]
+      });
+      await execSQLFiles(ctx.env.DB, 'test/setup.sql')
     },
     teardown: async (ctx) => aegisTeardown(ctx),
   },

@@ -19,39 +19,39 @@ export default Collection`Statement Compilation`({
   "Statement Preparation": ({ runScope: ctx }) => {
     // A single statement should compile to a single object.
     $check`Single statement, no binds`
-      .value(dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = 1;'))
+      .value(dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 1;'))
       .neq($, undefined)
       .isNotArray();
 
     // A single statement should compile to a single object, even with a bind.
     $check`Single statement, one bind`
-      .value(dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = ?;', [1]))
+      .value(dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = ?;', [1]))
       .neq($, undefined)
       .isNotArray();
 
     // A single statement with two binds should result in two statements.
     $check`Single statement, two binds`
-      .value(dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = ?;', [1], [69]))
+      .value(dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = ?;', [1], [69]))
       .isArray()
       .eq($.length, 2);
 
     // The same should happen if it's just two statements.
     $check`Two statements, no binds`
-      .value(dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = 1;',
+      .value(dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 1;',
                                          'SELECT * FROM Users WHERE userId = 69;'))
       .isArray()
       .eq($.length, 2);
 
     // Two statements each with one bind is still two statements.
     $check`Two statements, two binds`
-      .value(dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = ?;', [1],
+      .value(dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = ?;', [1],
                                          'SELECT * FROM Users WHERE userId = ?;', [69]))
       .isArray()
       .eq($.length, 2);
 
     // Two statements with three binds should be three statements.
     $check`Two statements, three binds`
-      .value(dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = ?;', [1],
+      .value(dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = ?;', [1],
                                          'SELECT * FROM Users WHERE userId = ?;', [69], [42]))
       .isArray()
       .eq($.length, 3);
@@ -69,43 +69,43 @@ export default Collection`Statement Compilation`({
    * precompiled statement instead. */
   "Statement Re-Use": ({ runScope: ctx }) => {
     // Create a regular and bound statement for reuse purposes below.
-    const stmt = dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = 1;');
-    const boundStmt = dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = ?;');
+    const stmt = dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 1;');
+    const boundStmt = dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = ?;');
 
     // A single statement should compile to a single object.
     $check`Single statement, no binds`
-      .value(dbPrepareStatements(ctx.db, stmt))
+      .value(dbPrepareStatements(ctx.env.DB, stmt))
       .neq($, undefined)
       .isNotArray();
 
     // A single statement should compile to a single object, even with a bind.
     $check`Single statement, one bind`
-      .value(dbPrepareStatements(ctx.db, boundStmt, [1]))
+      .value(dbPrepareStatements(ctx.env.DB, boundStmt, [1]))
       .neq($, undefined)
       .isNotArray();
 
     // A single statement with two binds should result in two statements.
     $check`Single statement, two binds`
-      .value(dbPrepareStatements(ctx.db, boundStmt, [1], [69]))
+      .value(dbPrepareStatements(ctx.env.DB, boundStmt, [1], [69]))
       .isArray()
       .eq($.length, 2);
 
     // The same should happen if it's just two statements.
     $check`Two statements, no binds`
-      .value(dbPrepareStatements(ctx.db, stmt, stmt))
+      .value(dbPrepareStatements(ctx.env.DB, stmt, stmt))
       .isArray()
       .eq($.length, 2);
 
     // Two statements each with one bind is still two statements.
     $check`Two statements, two binds`
-      .value(dbPrepareStatements(ctx.db, boundStmt, [1],
+      .value(dbPrepareStatements(ctx.env.DB, boundStmt, [1],
                                        boundStmt, [69]))
       .isArray()
       .eq($.length, 2);
 
     // Two statements with three binds should be three statements.
     $check`Two statements, three binds`
-      .value(dbPrepareStatements(ctx.db, boundStmt, [1],
+      .value(dbPrepareStatements(ctx.env.DB, boundStmt, [1],
                                        boundStmt, [69], [42]))
       .isArray()
       .eq($.length, 3);
@@ -123,23 +123,23 @@ export default Collection`Statement Compilation`({
    * check for SQL errors. */
   "Statement Failures": ({ runScope: ctx }) => {
     // Simple statement for testing with.
-    const boundStmt = dbPrepareStatements(ctx.db, 'SELECT * FROM Users WHERE userId = ?;');
+    const boundStmt = dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = ?;');
 
     // It is a failure to not provide any arguments to the prepare function.
     $check`No arguments`
-      .call(() => dbPrepareStatements(ctx.db))
+      .call(() => dbPrepareStatements(ctx.env.DB))
       .throws($, 'no statements provided to dbPrepareStatements()');
 
     // Providing an array prior to a statement is not valid.
     $check`Bind args before statements`
-      .call(() => dbPrepareStatements(ctx.db, [69], boundStmt))
+      .call(() => dbPrepareStatements(ctx.env.DB, [69], boundStmt))
       .throws($, 'bind arguments given before statement in input list');
 
     // The function only supports being passed SQL, prepared statements, and
     // bind arrays. All possible correct values were tested in the other
     // sections, so here we only need to test one situation here.
     $check`Function arg is not SQL,pre-compiled statement or bind args`
-      .call(() => dbPrepareStatements(ctx.db, 69))
+      .call(() => dbPrepareStatements(ctx.env.DB, 69))
       .throws($, 'arguments must be SQL strings, SQLStatement instances, or bind values (arrays/objects)');
   },
 });

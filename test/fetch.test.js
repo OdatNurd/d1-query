@@ -13,7 +13,7 @@ export default Collection`Simple Fetch Queries`({
   "Fetch Queries": async ({ runScope: ctx}) => {
     // Testing that a single result arrives as expected
     await $check`SELECT a single row`
-      .value(dbFetch(ctx.db, 'raw_test_one',
+      .value(dbFetch(ctx.env.DB, 'raw_test_one',
         'SELECT * FROM Users WHERE userId = 1;',
         ))
       .isArray()
@@ -22,7 +22,7 @@ export default Collection`Simple Fetch Queries`({
 
     // Testing that multiple results arrive as expected.
     await $check`SELECT two rows`
-      .value(dbFetch(ctx.db, 'raw_test_two' ,
+      .value(dbFetch(ctx.env.DB, 'raw_test_two' ,
         'SELECT * FROM Users WHERE userId IN (1, 69) ORDER BY userId ASC;',
         ))
       .isArray()
@@ -33,7 +33,7 @@ export default Collection`Simple Fetch Queries`({
 
     // Inserts produce an empty data set.
     await $check`INSERT single row`
-      .value(dbFetch(ctx.db, 'raw_test_three' ,
+      .value(dbFetch(ctx.env.DB, 'raw_test_three' ,
         'INSERT INTO Users VALUES(80, "bobert", true);',
         ))
       .isArray()
@@ -42,7 +42,7 @@ export default Collection`Simple Fetch Queries`({
     // As a batch, the result is an array of results; both inserts return no
     // values.
     await $check`INSERT two rows as batch`
-      .value(dbFetch(ctx.db, 'raw_test_four' ,
+      .value(dbFetch(ctx.env.DB, 'raw_test_four' ,
         'INSERT INTO Users VALUES(?1, ?2, ?3);',
           [81, "jimbo", 1],
           [82, "frankbert", false],
@@ -55,7 +55,7 @@ export default Collection`Simple Fetch Queries`({
     // Verify that D1 is batching as part of a transaction; here the data should
     // be returned since it is inserting prior to selecting.
     await $check`INSERT/SELECT as a batch`
-      .value(dbFetch(ctx.db, 'raw_test_five' ,
+      .value(dbFetch(ctx.env.DB, 'raw_test_five' ,
         'INSERT INTO Users VALUES(?1, ?2, ?3);',
           [83, "bohjimbo", 0],
           'SELECT * FROM Users WHERE userId = 83;',
@@ -70,7 +70,7 @@ export default Collection`Simple Fetch Queries`({
     // Verify that D1 is batching as part of a transaction; here it should not
     // find the data because it selects before it adds the data.
     await $check`SELECT/INSERT as a batch`
-      .value(dbFetch(ctx.db, 'raw_test_six' ,
+      .value(dbFetch(ctx.env.DB, 'raw_test_six' ,
         'SELECT * FROM Users WHERE userId = 84;',
         'INSERT INTO Users VALUES(?1, ?2, ?3);',
           [84, "jimbozo", true],
@@ -83,7 +83,7 @@ export default Collection`Simple Fetch Queries`({
     // Here the batch is trying to insert some new data and also some data that
     // already exists; as a result this should fail.
     await $check`INSERT new data and try to reinsert old data`
-      .call(async () => dbFetch(ctx.db, 'raw_test_seven' ,
+      .call(async () => dbFetch(ctx.env.DB, 'raw_test_seven' ,
         'INSERT INTO Users VALUES(?1, ?2, ?3);',
           [85, "neverseeme", true],
           [83, "bohjimbo", 0],
@@ -94,7 +94,7 @@ export default Collection`Simple Fetch Queries`({
     // it did not fail; this tests that batches are properly wrapped in
     // transactions.
     await $check`SELECT row that should not exist due to transaction rollback`
-      .value(dbFetch(ctx.db, 'raw_test_eight' ,
+      .value(dbFetch(ctx.env.DB, 'raw_test_eight' ,
         'SELECT * FROM Users WHERE userId = 85;',
         ))
       .isArray()
@@ -103,7 +103,7 @@ export default Collection`Simple Fetch Queries`({
     // Verify that the code that converts fields with r"is*" names to booleans
     // works as expected.
     await $check`Boolean Conversions`
-      .value(dbFetch(ctx.db, 'raw_test_nine' ,
+      .value(dbFetch(ctx.env.DB, 'raw_test_nine' ,
         `SELECT * FROM Users
           WHERE userId IN (70, 71, 72, 73)
           ORDER BY userId ASC;`,
@@ -129,7 +129,7 @@ export default Collection`Simple Fetch Queries`({
     // Querying with a single select statement when we know that a single item
     // should be returned should return that item, but not as an array.
     await $check`Fetch that returns a single result`
-      .value(dbFetchOne(ctx.db, 'fetch1_test_one',
+      .value(dbFetchOne(ctx.env.DB, 'fetch1_test_one',
                         'SELECT * FROM Users WHERE userId = 1;'))
       .isNotArray()
       .neq($, null)
@@ -139,7 +139,7 @@ export default Collection`Simple Fetch Queries`({
     // In a query that returns two items, we should still see exactly the same
     // thing because we only get one result back.
     await $check`Fetch that returns two results`
-      .value(dbFetchOne(ctx.db, 'fetch1_test_two',
+      .value(dbFetchOne(ctx.env.DB, 'fetch1_test_two',
                'SELECT * FROM Users WHERE userId IN (1, 69) ORDER BY userId ASC;'))
       .isNotArray()
       .neq($, null)
@@ -149,7 +149,7 @@ export default Collection`Simple Fetch Queries`({
     // If the query produces no results, it should return null instead of an
     // empty array.
     await $check`Fetch that returns no result`
-      .value(dbFetchOne(ctx.db, 'fetch1_test_three',
+      .value(dbFetchOne(ctx.env.DB, 'fetch1_test_three',
                'SELECT * FROM Users WHERE userId = 1000;'))
       .isNotArray()
       .eq($, null);
@@ -157,7 +157,7 @@ export default Collection`Simple Fetch Queries`({
     // The above also holds true when the query returns no results because it just
     // does not result in any data, such as an insert.
     await $check`Fetch of an insert statement`
-      .value(dbFetchOne(ctx.db, 'fetch1_test_four',
+      .value(dbFetchOne(ctx.env.DB, 'fetch1_test_four',
                'INSERT INTO Users VALUES(?1, ?2, ?3);',
                  [91, "jimbo", 1]))
       .isNotArray()
@@ -167,7 +167,7 @@ export default Collection`Simple Fetch Queries`({
     // return value should be the entire result set of the first query, even if
     // that returns more than one result.
     await $check`Fetch of a batch of statements`
-      .value(dbFetchOne(ctx.db, 'fetch1_test_five',
+      .value(dbFetchOne(ctx.env.DB, 'fetch1_test_five',
                'SELECT * FROM Users WHERE userId IN (1, 69) ORDER BY userId ASC;',
                'SELECT * FROM Users WHERE userId >= 70;'))
       .isArray()
@@ -181,7 +181,7 @@ export default Collection`Simple Fetch Queries`({
     // result, what we get back is still the whole result, which should be an
     // empty array.
     await $check`Fetch of a batch of inserts`
-      .value(dbFetchOne(ctx.db, 'fetch1_test_six',
+      .value(dbFetchOne(ctx.env.DB, 'fetch1_test_six',
                'INSERT INTO Users VALUES(?1, ?2, ?3);',
                  [101, "jimbo", 1],
                  [102, "frankbert", false]))
