@@ -245,6 +245,74 @@ export default Collection`Statement Preparation`({
       .call(() => mapBinds(noParamsMeta, []))
       .throws($, 'statement does not accept any bind parameters');
   },
+
+  /****************************************************************************/
+
+  /* This set of tests validates that the canProduceResult flag is correctly
+   * set on statements that can and cannot produce results. */
+  "Result Producing Statement Detection": ({ runScope: ctx }) => {
+    // Statements that can produce results
+    $check`SELECT statement`
+      .value(processSQLString('SELECT * FROM Users;').canProduceResult)
+      .eq($, true);
+
+    // $check`PRAGMA statement`
+    //   .value(processSQLString('PRAGMA table_info(Users);').canProduceResult)
+    //   .eq($, true);
+
+    // $check`EXPLAIN statement`
+    //   .value(processSQLString('EXPLAIN SELECT * FROM Users;').canProduceResult)
+    //   .eq($, true);
+
+    // $check`VALUES statement`
+    //   .value(processSQLString('VALUES (1, 2), (3, 4);').canProduceResult)
+    //   .eq($, true);
+
+    $check`INSERT with RETURNING`
+      .value(processSQLString('INSERT INTO Users (name) VALUES ("test") RETURNING *;').canProduceResult)
+      .eq($, true);
+
+    $check`UPDATE with RETURNING`
+      .value(processSQLString('UPDATE Users SET name = "new" WHERE id = 1 RETURNING *;').canProduceResult)
+      .eq($, true);
+
+    $check`DELETE with RETURNING`
+      .value(processSQLString('DELETE FROM Users WHERE id = 1 RETURNING *;').canProduceResult)
+      .eq($, true);
+
+    // Statements that do not produce results
+    $check`INSERT without RETURNING`
+      .value(processSQLString('INSERT INTO Users (name) VALUES ("test");').canProduceResult)
+      .eq($, false);
+
+    $check`UPDATE without RETURNING`
+      .value(processSQLString('UPDATE Users SET name = "new" WHERE id = 1;').canProduceResult)
+      .eq($, false);
+
+    $check`DELETE without RETURNING`
+      .value(processSQLString('DELETE FROM Users WHERE id = 1;').canProduceResult)
+      .eq($, false);
+
+    $check`CREATE TABLE statement`
+      .value(processSQLString('CREATE TABLE Test (id INTEGER PRIMARY KEY);').canProduceResult)
+      .eq($, false);
+
+    $check`ALTER TABLE statement`
+      .value(processSQLString('ALTER TABLE Users ADD COLUMN age INTEGER;').canProduceResult)
+      .eq($, false);
+
+    $check`DROP TABLE statement`
+      .value(processSQLString('DROP TABLE Users;').canProduceResult)
+      .eq($, false);
+
+    $check`CREATE INDEX statement`
+      .value(processSQLString('CREATE INDEX idx_name ON Users (name);').canProduceResult)
+      .eq($, false);
+
+    // $check`DROP INDEX statement`
+    //   .value(processSQLString('DROP INDEX idx_name;').canProduceResult)
+    //   .eq($, false);
+  }
 });
 
 

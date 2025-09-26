@@ -37,7 +37,7 @@ export function prepare(db, processedSQL, bindableIndices, ...binds) {
   // now and add it to the cache.
   if (statementCache.has(processedSQL) === false) {
     const prepared = processedSQL.map(info => {
-      return new SQLStatement(db.prepare(info.sql), info.bindMetadata);
+      return new SQLStatement(db.prepare(info.sql), info.bindMetadata, info.canProduceResult);
     });
     statementCache.set(processedSQL, prepared);
   }
@@ -60,7 +60,7 @@ export function prepare(db, processedSQL, bindableIndices, ...binds) {
       const boundStmts = binds.map(bindValue => {
         const orderedBinds = mapBinds(statements[0].bindMetadata, bindValue);
         const newD1Stmt = statements[0].statement.bind(...orderedBinds);
-        return new SQLStatement(newD1Stmt, statements[0].bindMetadata);
+        return new SQLStatement(newD1Stmt, statements[0].bindMetadata, statements[0].canProduceResult);
       });
       return boundStmts.length === 1 ? boundStmts[0] : boundStmts;
     }
@@ -76,7 +76,7 @@ export function prepare(db, processedSQL, bindableIndices, ...binds) {
       const bindValue = binds[bindIndex++];
       const orderedBinds = mapBinds(stmt.bindMetadata, bindValue);
       const newD1Stmt = stmt.statement.bind(...orderedBinds);
-      return new SQLStatement(newD1Stmt, stmt.bindMetadata);
+      return new SQLStatement(newD1Stmt, stmt.bindMetadata, stmt.canProduceResult);
     }
     return stmt;
   });
