@@ -75,7 +75,16 @@ export default Collection`Rollup Plugin`({
       .isFunction($.create_roles)
       .isFunction($.insert_select)
       .isFunction($.insert_role)
-      .isFunction($.executeInsertRole);
+      .isFunction($.executeInsertRole)
+      .isFunction($.fetchFirst_single_result)
+      .isFunction($.fetchFirst_batch_first_returns)
+      .isFunction($.fetchFirst_batch_later_returns)
+      .isFunction($.fetchFirst_no_results)
+      .isFunction($.fetchFirst_multiple_rows)
+      .isFunction($.fetchFirst_no_rows)
+      .isFunction($.fetchFirst_potential_no_result)
+      .isFunction($.fetchFirst_multiple_potential_no_results)
+      .isFunction($.fetchFirst_first_potential_empty);
   },
 
 
@@ -107,14 +116,15 @@ export default Collection`Rollup Plugin`({
     // If we do the same thing and pass a single bind, we should get back a
     // single statement, because one bind.
     $check`Single bindable with one bind specified`
-      .call(() => ctx.queries.single_bindable(ctx.env.DB, { roleId: 69 }))
+      .call(() => ctx.queries.single_bindable(ctx.env.DB,
+        { roleId: 69 }))
       .isNotArray();
 
     // If we pass two binds, we should get two statements, one per bind.
     $check`Single bindable with two binds specified`
       .call(() => ctx.queries.single_bindable(ctx.env.DB,
-                                              { roleId: 69 },
-                                              { roleId: 70 }))
+        { roleId: 69 },
+        { roleId: 70 }))
       .isArray()
       .eq($.length, 2);
 
@@ -132,13 +142,18 @@ export default Collection`Rollup Plugin`({
 
     // With two statements and two binds, the return should be two statements.
     $check`Two bindable with two binds`
-      .call(() => ctx.queries.two_bindable(ctx.env.DB, { roleId: 1 }, { roleId: 2, roleName: 'test' }))
+      .call(() => ctx.queries.two_bindable(ctx.env.DB,
+        { roleId: 1 },
+        { roleId: 2, roleName: 'test' }))
       .isArray()
       .eq($.length, 2);
 
     // WIth two statements, three binds is an error because it does not match.
     $check`Two bindable with three binds (error)`
-      .call(() => ctx.queries.two_bindable(ctx.env.DB, { roleId: 1 }, { roleId: 2, roleName: 'test' }, { roleId: 3 }))
+      .call(() => ctx.queries.two_bindable(ctx.env.DB,
+        { roleId: 1 },
+        { roleId: 2, roleName: 'test' },
+        { roleId: 3 }))
       .throws($, 'query file contains 2 bindable statements, but 3 bind(s) provided');
 
     // With two statements and only one is bindable, we get two statements if
@@ -151,14 +166,17 @@ export default Collection`Rollup Plugin`({
     // With two statements and one bindable, a single bind still returns two
     // statements, but in this case the one that is bindable is bound.
     $check`One bindable with one bind`
-      .call(() => ctx.queries.one_bindable(ctx.env.DB, { roleName: 'bob' }))
+      .call(() => ctx.queries.one_bindable(ctx.env.DB,
+        { roleName: 'bob' }))
       .isArray()
       .eq($.length, 2);
 
     // Providing two binds even though there are two statements is an error
     // because only one of them is bindable.
     $check`One bindable with two binds (error)`
-     .call(() => ctx.queries.one_bindable(ctx.env.DB, { roleName: 'bob' }, { roleName: 'jim' }))
+     .call(() => ctx.queries.one_bindable(ctx.env.DB,
+       { roleName: 'bob' },
+       { roleName: 'jim' }))
      .throws($, 'query file contains 1 bindable statements, but 2 bind(s) provided');
 
     // Three statements with no binds returns three (unbound) statements.
@@ -170,18 +188,24 @@ export default Collection`Rollup Plugin`({
     // Three staetments with two of them bindable is an error if only one bind
     // is provided.
     $check`Three with two bindable with one bind (error)`
-      .call(() => ctx.queries.three_two_bindable(ctx.env.DB, { roleId: 1 }))
+      .call(() => ctx.queries.three_two_bindable(ctx.env.DB,
+        { roleId: 1 }))
       .throws($, 'query file contains 2 bindable statements, but 1 bind(s) provided');
 
     // When two binds are provied, this should succeed with three statements.
     $check`Three with two bindable with two binds`
-      .call(() => ctx.queries.three_two_bindable(ctx.env.DB, { roleId: 1 }, { roleId: 2, roleName: 'test' }))
+      .call(() => ctx.queries.three_two_bindable(ctx.env.DB,
+        { roleId: 1 },
+        { roleId: 2, roleName: 'test' }))
       .isArray()
       .eq($.length, 3);
 
     // Three statements when two are bindable, but three binds, is an error.
     $check`Three with two bindable with three binds (error)`
-      .call(() => ctx.queries.three_two_bindable(ctx.env.DB, { roleId: 1 }, { roleId: 2, roleName: 'test' }, { roleId: 3 }))
+      .call(() => ctx.queries.three_two_bindable(ctx.env.DB,
+        { roleId: 1 },
+        { roleId: 2, roleName: 'test' },
+        { roleId: 3 }))
       .throws($, 'query file contains 2 bindable statements, but 3 bind(s) provided');
   },
 
@@ -206,8 +230,7 @@ export default Collection`Rollup Plugin`({
     await $check`Insert initial roles`
       .value(dbFetch(ctx.env.DB, 'insert_roles', ...ctx.queries.insert_role(ctx.env.DB,
         { roleId: 1, roleName: 'Admin' },
-        { roleId: 2, roleName: 'User' }
-      )))
+        { roleId: 2, roleName: 'User' })))
       .isArray()
       .eq($.length, 2)
       .eq($[0].length, 0)
@@ -216,7 +239,8 @@ export default Collection`Rollup Plugin`({
     // Attempt to select a single role out; the single bind should return a
     // single statement, and thus not need to be spread.
     await $check`Select a single role`
-      .value(dbFetch(ctx.env.DB, 'select_role', ctx.queries.single_bindable(ctx.env.DB, { roleId: 1 })))
+      .value(dbFetch(ctx.env.DB, 'select_role', ctx.queries.single_bindable(ctx.env.DB,
+        { roleId: 1 })))
       .isArray()
       .eq($.length, 1)
       .eq($[0].roleName, 'Admin');
@@ -226,8 +250,7 @@ export default Collection`Rollup Plugin`({
     await $check`Batch insert and select a role`
       .value(dbFetch(ctx.env.DB, 'insert_select_role', ...ctx.queries.insert_select(ctx.env.DB,
         { roleId: 3, roleName: 'Guest' },
-        { roleId: 3 }
-      )))
+        { roleId: 3 })))
       .isArray()
       .eq($.length, 2)
       .eq($[1].length, 1)
@@ -238,14 +261,14 @@ export default Collection`Rollup Plugin`({
     // the moderator role.
     await $check`Transaction rollback on failed batch insert`
       .call(() => dbFetch(ctx.env.DB, 'insert_existing_role', ...ctx.queries.insert_role(ctx.env.DB,
-        { roleId: 1, roleName: 'Admin' }, // This one already exists
-        { roleId: 4, roleName: 'Moderator' }
-      )))
+        { roleId: 1, roleName: 'Admin' },
+        { roleId: 4, roleName: 'Moderator' })))
       .throws($, 'D1_ERROR: UNIQUE constraint failed: Roles.roleId: SQLITE_CONSTRAINT');
 
     // Validate that the transaction stopped the moderator from being inserted.
     await $check`Verify transaction rollback`
-      .value(dbFetch(ctx.env.DB, 'select_nonexistent_role', ctx.queries.single_bindable(ctx.env.DB, { roleId: 4 })))
+      .value(dbFetch(ctx.env.DB, 'select_nonexistent_role', ctx.queries.single_bindable(ctx.env.DB,
+        { roleId: 4 })))
       .isArray()
       .eq($.length, 0);
   },
@@ -260,7 +283,8 @@ export default Collection`Rollup Plugin`({
     // When there is a single bind, a single statement is executed; the wrapper
     // should return a single result without complaint.
     await $check`fetch() with a single statement`
-      .value(ctx.queries.fetchRoles(ctx.env.DB, 'fetch_single_role', { roleId: 1 }))
+      .value(ctx.queries.fetchRoles(ctx.env.DB, 'fetch_single_role',
+        { roleId: 1 }))
       .isArray()
       .eq($.length, 1)
       .eq($[0].roleName, 'Admin');
@@ -268,7 +292,9 @@ export default Collection`Rollup Plugin`({
     // When there are two binds, there are two statements to execute; this
     // should still seamlessly work.
     await $check`fetch() with multiple binds`
-      .value(ctx.queries.fetchRoles(ctx.env.DB, 'fetch_multiple_roles', { roleId: 1 }, { roleId: 2 }))
+      .value(ctx.queries.fetchRoles(ctx.env.DB, 'fetch_multiple_roles',
+        { roleId: 1 },
+        { roleId: 2 }))
       .isArray()
       .eq($.length, 2)
       .eq($[0][0].roleName, 'Admin')
@@ -277,27 +303,105 @@ export default Collection`Rollup Plugin`({
     // The fetchOne() wrapper works like the fetch wrapper, so it should work with
     // a single bind.
     await $check`fetchOne() with a single statement`
-      .value(ctx.queries.fetchOneRole(ctx.env.DB, 'fetchOne_single_role', { roleId: 1 }))
+      .value(ctx.queries.fetchOneRole(ctx.env.DB, 'fetchOne_single_role',
+        { roleId: 1 }))
       .isNotArray()
       .eq($.roleName, 'Admin');
 
     // If there are multiple binds, then there would be multiple statements, but
     // this should still return only a single item.
     await $check`fetchOne() with multiple binds`
-      .value(ctx.queries.fetchOneRole(ctx.env.DB, 'fetchOne_multiple_roles', { roleId: 1 }, { roleId: 2 }))
+      .value(ctx.queries.fetchOneRole(ctx.env.DB, 'fetchOne_multiple_roles',
+        { roleId: 1 },
+        { roleId: 2 }))
       .isArray()
       .eq($.length, 1)
       .eq($[0].roleName, 'Admin');
 
+      await $check`fetchFirst() with a single result`
+        .value(ctx.queries.fetchFirst_single_result(ctx.env.DB, 'fetchFirst_test_one',
+          { roleId: 1 }))
+        .isNotArray()
+        .neq($, null)
+        .eq($.roleId, 1)
+        .eq($.roleName, "Admin");
+
+      // A batch where the first statement returns a result.
+      await $check`fetchFirst() with a batch, first statement returns`
+        .value(ctx.queries.fetchFirst_batch_first_returns(ctx.env.DB, 'fetchFirst_test_two',
+          { roleId1: 1, roleId2: 2 },
+          { roleId3: 500, roleName: 'Test Role'}))
+        .isNotArray()
+        .neq($, null)
+        .eq($.roleId, 1)
+        .eq($.roleName, "Admin");
+
+      // A batch where a later statement is the first to return a result.
+      await $check`fetchFirst() with a batch, later statement returns`
+        .value(ctx.queries.fetchFirst_batch_later_returns(ctx.env.DB, 'fetchFirst_test_three',
+          { roleId: 501, roleName: 'Test Role 2' },
+          { roleName: 'User' }))
+        .isNotArray()
+        .neq($, null)
+        .eq($.roleId, 2)
+        .eq($.roleName, "User");
+
+      // A batch where no statements return results.
+      await $check`fetchFirst() with no result-producing statements`
+        .value(ctx.queries.fetchFirst_no_results(ctx.env.DB, 'fetchFirst_test_four',
+          { roleId: 502, roleName: 'New Role 1' },
+          { roleId: 1, roleName: 'Admin' }))
+        .eq($, null);
+
+      // A query that returns multiple rows should still only return the first.
+      await $check`fetchFirst() that returns multiple rows`
+        .value(ctx.queries.fetchFirst_multiple_rows(ctx.env.DB, 'fetchFirst_test_five',
+          { roleId1: 1, roleId2: 2 }))
+        .isNotArray()
+        .neq($, null)
+        .eq($.roleId, 1)
+        .eq($.roleName, "Admin");
+
+      // A query that returns no rows should return null.
+      await $check`fetchFirst() that returns no rows`
+        .value(ctx.queries.fetchFirst_no_rows(ctx.env.DB, 'fetchFirst_test_six',
+          { roleId: 1000 }))
+        .eq($, null);
+
+      // A batch where a later statement could return a result but doesn't.
+      await $check`fetchFirst() with a batch, potential but no result`
+        .value(ctx.queries.fetchFirst_potential_no_result(ctx.env.DB, 'fetchFirst_test_seven',
+          { roleId: 503, roleName: 'Test Role 3' },
+          { roleName: 'NonExistent' }))
+        .eq($, null);
+
+      // A batch with two statements that can return results, but neither do.
+      await $check`fetchFirst() with multiple potential results, but none found`
+        .value(ctx.queries.fetchFirst_multiple_potential_no_results(ctx.env.DB, 'fetchFirst_test_eight',
+          { roleId1: 1002 },
+          { roleId2: 1003 }))
+        .eq($, null);
+
+      // A batch where the first statement that can return a result doesn't, so
+      // the result is null even though a later statement does return a result.
+      await $check`fetchFirst() with a batch, first potential result is empty`
+        .value(ctx.queries.fetchFirst_first_potential_empty(ctx.env.DB, 'fetchFirst_test_nine',
+          { roleId1: 1004 },
+          { roleId2: 1 }))
+        .eq($, null);
+
     // Execution of a single statement results in nothing.
     await $check`execute() with a single statement`
-      .value(ctx.queries.executeRole(ctx.env.DB, 'execute_single_role', { roleId: 1 }))
+      .value(ctx.queries.executeRole(ctx.env.DB, 'execute_single_role',
+        { roleId: 1 }))
       .eq($, undefined);
 
     // Still nothing with multiple binds in the batch, but this verifies that
     // the wrapper correctly handles having to execute multiple statments.
     await $check`execute() with multiple binds`
-      .value(ctx.queries.executeRole(ctx.env.DB, 'execute_multiple_roles', { roleId: 1 }, { roleId: 2 }))
+      .value(ctx.queries.executeRole(ctx.env.DB, 'execute_multiple_roles',
+        { roleId: 1 },
+        { roleId: 2 }))
       .eq($, undefined);
   }
 });

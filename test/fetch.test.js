@@ -1,6 +1,6 @@
 import { Collection, $check, $ } from "@axel669/aegis";
 
-import { dbFetch, dbFetchOne } from "../lib/query.js";
+import { dbFetch, dbFetchOne, dbFetchFirst } from "../lib/query.js";
 
 
 /******************************************************************************/
@@ -187,6 +187,86 @@ export default Collection`Simple Fetch Queries`({
                  [102, "frankbert", false]))
       .isArray()
       .eq($.length, 0);
+  },
+
+  /****************************************************************************/
+
+  /* This set of queries exercises the dbFetchFirst() API, which finds the
+   * first statement in a potential batch that can return a result and
+   * returns the first row of that result set. */
+  "Fetch First Queries": async ({ runScope: ctx}) => {
+    // A single select that returns a result should return the first row.
+    await $check`Fetch first with a single result`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_one',
+                        'SELECT * FROM Users WHERE userId = 1;'))
+      .isNotArray()
+      .neq($, null)
+      .eq($.userId, 1)
+      .eq($.username, "bob");
+
+    // A batch where the first statement returns a result.
+    await $check`Fetch first with a batch, first statement returns`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_two',
+               'SELECT * FROM Users WHERE userId IN (1, 69) ORDER BY userId ASC;',
+               'INSERT INTO Users VALUES(200, "test", 0);'))
+      .isNotArray()
+      .neq($, null)
+      .eq($.userId, 1)
+      .eq($.username, "bob");
+
+    // A batch where a later statement is the first to return a result.
+    await $check`Fetch first with a batch, later statement returns`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_three',
+               'INSERT INTO Users VALUES(201, "test", 0);',
+               'SELECT * FROM Users WHERE userId = 69;'))
+      .isNotArray()
+      .neq($, null)
+      .eq($.userId, 69)
+      .eq($.username, "jim");
+
+    // A batch where no statements return results.
+    await $check`Fetch first with no result-producing statements`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_four',
+               'INSERT INTO Users VALUES(202, "test", 0);',
+               'UPDATE Users SET isCool=1 WHERE userId=1;'))
+      .eq($, null);
+
+    // A query that returns multiple rows should still only return the first.
+    await $check`Fetch first that returns multiple rows`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_five',
+               'SELECT * FROM Users WHERE userId IN (1, 69) ORDER BY userId ASC;'))
+      .isNotArray()
+      .neq($, null)
+      .eq($.userId, 1)
+      .eq($.username, "bob");
+
+    // A query that returns no rows should return null.
+    await $check`Fetch first that returns no rows`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_six',
+               'SELECT * FROM Users WHERE userId = 1000;'))
+      .eq($, null);
+
+    // A batch where a later statement could return a result but doesn't.
+    await $check`Fetch first with a batch, potential but no result`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_seven',
+               'INSERT INTO Users VALUES(203, "test", 0);',
+               'SELECT * FROM Users WHERE userId = 1001;'))
+      .eq($, null);
+
+    // A batch with two statements that can return results, but neither do.
+    await $check`Fetch first with multiple potential results, but none found`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_eight',
+               'SELECT * FROM Users WHERE userId = 1002;',
+               'SELECT * FROM Users WHERE userId = 1003;'))
+      .eq($, null);
+
+    // A batch where the first statement that can return a result doesn't, so
+    // the result is null even though a later statement does return a result.
+    await $check`Fetch first with a batch, first potential result is empty`
+      .value(dbFetchFirst(ctx.env.DB, 'fetchFirst_test_nine',
+               'SELECT * FROM Users WHERE userId = 1004;',
+               'SELECT * FROM Users WHERE userId = 1;'))
+      .eq($, null);
   }
 });
 

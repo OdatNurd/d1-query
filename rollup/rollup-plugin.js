@@ -88,7 +88,7 @@ export default function d1sql() {
       return {
         code: `
 import { prepare } from '${HELPER_MODULE_ID}';
-import { dbFetch, dbFetchOne } from '@odatnurd/d1-query';
+import { dbFetch, dbFetchOne, dbFetchFirst } from '@odatnurd/d1-query';
 
 const sqlInfo = ${JSON.stringify(statements)};
 const bindables = ${JSON.stringify(bindableIndices)};
@@ -99,20 +99,22 @@ export function statements(db, ...binds) {
 
 export async function fetch(db, action, ...binds) {
   const prepared = statements(db, ...binds);
-  const args = Array.isArray(prepared) ? prepared : [prepared];
-  return dbFetch(db, action, ...args);
+  return dbFetch(db, action, ...(Array.isArray(prepared) ? prepared : [prepared]));
 }
 
 export async function fetchOne(db, action, ...binds) {
   const prepared = statements(db, ...binds);
-  const args = Array.isArray(prepared) ? prepared : [prepared];
-  return dbFetchOne(db, action, ...args);
+  return dbFetchOne(db, action, ...(Array.isArray(prepared) ? prepared : [prepared]));
+}
+
+export async function fetchFirst(db, action, ...binds) {
+    const prepared = statements(db, ...binds);
+    return dbFetchFirst(db, action, ...(Array.isArray(prepared) ? prepared : [prepared]));
 }
 
 export async function execute(db, action, ...binds) {
   const prepared = statements(db, ...binds);
-  const args = Array.isArray(prepared) ? prepared : [prepared];
-  await dbFetch(db, action, ...args);
+  await dbFetch(db, action, ...(Array.isArray(prepared) ? prepared : [prepared]));
 }
 
 export default statements;

@@ -192,6 +192,34 @@ console.log(result);
 // { userId: 1, username: 'bob' }
 ```
 
+`dbFetchFirst` is a convenience wrapper similar to `dbFetchOne` for use when
+the list of statements executed is a batch. In this case, where `dbFetchOne`
+would return the entire result set of the first statement in the batch,
+`dbFetchFirst` instead selects the result set of the first statement in the
+batch that can possibly return a result, and then acts as if that was the only
+statement executed.
+
+This is a convenience for cases in which a batch of statements has some setup
+statements that don't return values and one that does, allowing you to collect
+the results without having to be senstive to the position in the list of
+statements.
+
+```js
+// This batch first inserts a new user, then selects an existing one.
+// dbFetchFirst will skip the empty result from the INSERT and return the
+// first row from the SELECT.
+const result = await dbFetchFirst(ctx.env.DB, 'insert_and_fetch',
+    'INSERT INTO Users (userId, username) VALUES (99, "sally");',
+    'SELECT * FROM Users WHERE userId = 1;');
+
+console.log(result);
+
+// Produces
+// [0ms]   => insert_and_fetch :  OK  : last_row_id=99, reads=1, writes=1, resultSize=0
+// [0ms]   => insert_and_fetch :  OK  : last_row_id=99, reads=1, writes=0, resultSize=1
+// { userId: 1, username: 'bob' }
+```
+
 
 ## Rollup Plugin
 
@@ -257,13 +285,15 @@ that have taken arguments will be bound.
 ```js
 export async function fetch(db, action, ...binds) {}
 export async function fetchOne(db, action, ...binds) {}
+export async function fetchFirst(db, action, ...binds) {}
 export async function execute(db, action, ...binds) {}
 ```
 
 These functions simplify the query process by first calling `statements()` with
-the provided binds, and then carrying out the actual query via `dbFetch()` or
-`dbFetchOne()`. `execute()` performs as `fetch()` but does not return any
-results back.
+the provided binds, and then carrying out the actual query via `dbFetch()`,
+`dbFetchOne()` or `dbFetchFirst()`.
+
+`execute()` performs as `fetch()` but does not return any results back.
 
 
 ### Basic Usage: No Binds
@@ -496,6 +526,23 @@ first element of the result, or null if the result did not contain any rows.
 
 When executed on a batch statement this will return the entire result set of
 the first query in the batch, which may or may not be what you expect.
+
+```js
+export async function dbFetchFirst(db, action, ...sqlargs) {}
+```
+
+This executes similarly to `dbFetchOne()` in that you get the first result of  a
+result set, or null if the result set did not contain any rows.
+
+The difference is in the selection of the result set when the input is a
+batch. Where `dbFetchOne()` always chooses the first result set (and will thus
+return the entire result set), this version selects the result set from the
+first statement in the batch that can result in an output and then treats it
+as if that statement was the only statement executed.
+
+This is a convenience around executing a batch of statements that contain
+setup statements that don't return values and one that does without having to
+closely track the order and count of the statements.
 
 
 ## Acknowledgements
