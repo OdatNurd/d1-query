@@ -70,38 +70,40 @@ const stmt1 = dbPrepareStatements(ctx.env.DB,
     'SELECT * FROM Users'
 );
 
-// Single statement, but searching for a specific user via anonymous binds,
-// which are provided via array.
+// Single statement, but searching for a specific user via anonymous
+// binds, which are provided via array.
 const stmt2 = dbPrepareStatements(ctx.env.DB,
     'SELECT * FROM Users WHERE userId = ? OR username = ?'
     [1, 'bob']
 );
 
-// Another single statement, augmented to use named binds instead; here the
-// binds are provided via an object.
+// Another single statement, augmented to use named binds instead;
+// here the binds are provided via an object.
 const stmt3 = dbPrepareStatements(ctx.env.DB,
-    'SELECT * FROM Users WHERE userId = :userId OR username = :userName'
+    `SELECT * FROM Users WHERE userId = :userId
+                            OR username = :userName`
     { userId: 69, userName: 'jim'}
 );
 
-// Once a statement has been prepared once, you can re-use it and bind it to
-// different arguments; this does not need to recompile the SQL; this works for
-// any statement that takes bind parameters.
+// Once a statement has been prepared once, you can re-use it and bind
+// it to different arguments; this does not need to recompile the SQL;
+// this works for any statement that takes bind parameters.
 const stmt4 = dbPrepareStatements(ctx.env.DB, stmt2,
     [69, 'jim']
 );
 
-// A single statement (either prepared or just a SQL string) can be bound to
-// multiple sets of bind values at once, producing an array of statements that
-// can executed singly or via a batch operation, which implicitly wraps the
-// execution in a transaction.
+// A single statement (either prepared or just a SQL string) can be
+// bound to multiple sets of bind values at once, producing an array
+// of statements that can executed singly or via a batch operation,
+// which implicitly wraps the execution in a transaction.
 const inserts = await dbPrepareStatements(ctx.env.DB,
-    'INSERT INTO Users (userId, username) VALUES (:userId, :userName)',
+    `INSERT INTO Users (userId, username)
+                VALUES (:userId, :userName)`,
 
-    // Three objects all bind to the same statement, creating a batch that
-    // executes the same statement three times, with different arguments each
-    // time. Also works with numbered or anonymous binds (but then you would
-    // use an array).
+    // Three objects all bind to the same statement, creating a batch
+    // that executes the same statement three times, with different
+    // arguments each time. Also works with numbered or anonymous
+    // binds (but then you would use an array).
     { userId: 67, userName: 'frank'  },
     { userId: 68, userName: 'stuart' },
     { userId: 69, userName: 'nice'   }
@@ -135,8 +137,9 @@ console.log(result);
 // [0ms]  fetch_users :  OK  : last_row_id=69, reads=2, writes=0, resultSize=2
 // [ { userId: 1, username: 'bob' }, { userId: 69, username: 'jim' } ]
 
-// This can also execute multiple statements as a batch; in this case the result
-// is a set of empty arrays, since insert do not generate results on their own.
+// This can also execute multiple statements as a batch; in this case
+// the result is a set of empty arrays, since insert do not generate
+// results on their own.
 result = await dbRawQuery(ctx.env.DB, inserts, 'insert_users');
 console.log(result);
 
@@ -156,16 +159,18 @@ this form, the `action` comes before the SQL statements, since there are a
 variable number of arguments.
 
 ```js
-let result = await dbFetch(ctx.env.DB, 'fetch_users', 'SELECT * FROM Users');
+let result = await dbFetch(ctx.env.DB, 'fetch_users',
+                                       'SELECT * FROM Users');
 
-// Unlike above, this example uses a numbered bind style just to showcase
-// possible options; named binds still work here.
+// Unlike above, this example uses a numbered bind style just to
+// showcase possible options; named binds still work here.
 result = await dbFetch(ctx.env.DB, 'insert_users',
     'INSERT INTO Users (userId, username) VALUES (?1, ?2)',
 
-    // Three arrays all bind to the same statement, creating a batch that
-    // executes the same statement three times, with different arguments each
-    // time.
+    // Three arrays all bind to the same statement, creating a batch
+    // that
+    // executes the same statement three times, with different
+    // arguments each time.
     [67, 'frank'],
     [68, 'stuart'],
     [69, 'nice']
@@ -177,14 +182,16 @@ the query is no rows, `null` is returned; otherwise the return value is just
 the first result, even if there are many results returned.
 
 ```js
-let result = await dbFetch(ctx.env.DB, 'fetch_users', 'SELECT * FROM Users');
+let result = await dbFetch(ctx.env.DB, 'fetch_users',
+                                       'SELECT * FROM Users');
 console.log(result);
 
 // Produces
 // [0ms]  fetch_users :  OK  : last_row_id=69, reads=2, writes=0, resultSize=2
 // [ { userId: 1, username: 'bob' }, { userId: 69, username: 'jim' } ]
 
-result = await dbFetchOne(ctx.env.DB, 'fetch_users', 'SELECT * FROM Users');
+result = await dbFetchOne(ctx.env.DB, 'fetch_users',
+                                      'SELECT * FROM Users');
 console.log(result);
 
 // Produces
@@ -305,7 +312,7 @@ import getUser from './get-user.sql';
 // getUser is a function; calling it with the database gives you the
 // prepared SQL statement, ready for execution.
 const statements = getUser(ctx.env.DB);
-const result = await dbFetch(ctx.env.DB, 'get_user_query', statements);
+const result = await dbFetch(ctx.env.DB, 'get_user', statements);
 ```
 
 
@@ -314,16 +321,18 @@ const result = await dbFetch(ctx.env.DB, 'get_user_query', statements);
 import { dbFetch } from '@odatnurd/d1-query';
 import insertUser from './insert-user.sql';
 
-// Assume insert-user.sql contains a single INSERT statement.
-// We can provide multiple bind objects to create a batch operation.
+// Assume insert-user.sql contains a single INSERT statement. We can
+// provide multiple bind objects to create a batch operation.
 const statements = insertUser(ctx.env.DB,
   { userId: 10, username: 'Alice' },
   { userId: 11, username: 'Bob' }
 );
 
-// This will execute the INSERT statement twice as a single batch; note that
-// you need to spread the resulting statements because it is an array.
-const result = await dbFetch(ctx.env.DB, 'batch_insert_users', ...statements);
+// This will execute the INSERT statement twice as a single batch;
+// note that you need to spread the resulting statements because it is
+// an array.
+const result = await dbFetch(ctx.env.DB, 'batch_insert_users',
+                                         ...statements);
 ```
 
 An alternative to the above using the convenience method would be:
@@ -384,9 +393,16 @@ the database first in order to set up testing.
 **Example `aegis.config.js`:**
 
 ```js
-import { initializeCustomChecks, aegisSetup, aegisTeardown } from '@odatnurd/cf-aegis';
+import {
+  initializeCustomChecks,
+  aegisSetup,
+  aegisTeardown
+} from '@odatnurd/cf-aegis';
 
-import { initializeD1Checks, execSQLFiles } from '@odatnurd/d1-query/aegis';
+import {
+  initializeD1Checks,
+  execSQLFiles
+} from '@odatnurd/d1-query/aegis';
 
 initializeCustomChecks();
 initializeD1Checks();

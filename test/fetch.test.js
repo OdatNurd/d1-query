@@ -88,7 +88,7 @@ export default Collection`Simple Fetch Queries`({
           [85, "neverseeme", true],
           [83, "bohjimbo", 0],
         ))
-      .throws($, 'D1_ERROR: UNIQUE constraint failed: Users.userId: SQLITE_CONSTRAINT');
+      .throws($, 'D1_ERROR: UNIQUE constraint failed: Users.userId: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_PRIMARYKEY)');
 
     // Now try to select the data that the previous batch would have inserted if
     // it did not fail; this tests that batches are properly wrapped in

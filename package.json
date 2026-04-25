@@ -33,20 +33,20 @@
   ],
   "devDependencies": {
     "@axel669/aegis": "^0.3.1",
-    "@odatnurd/cf-aegis": "^0.1.4",
+    "@odatnurd/cf-aegis": "^0.1.9",
     "fs-jetpack": "^5.1.0",
     "json5": "^2.2.3",
-    "miniflare": "^4.20250923.0",
+    "miniflare": "^4.20260424.0",
     "rollup": "^4.45.1",
-    "smol-toml": "^1.4.2"
+    "smol-toml": "^1.6.1"
   },
   "peerDependencies": {
     "@axel669/aegis": "^0.3.1",
-    "@odatnurd/cf-aegis": "^0.1.4",
+    "@odatnurd/cf-aegis": "^0.1.9",
     "fs-jetpack": "^5.1.0",
     "json5": "^2.2.3",
-    "miniflare": "^4.20250923.0",
-    "smol-toml": "^1.4.2"
+    "miniflare": "^4.20260424.0",
+    "smol-toml": "^1.6.1"
   },
   "peerDependenciesMeta": {
     "@axel669/aegis": {
@@ -56,19 +56,16 @@
       "optional": true
     },
     "miniflare": {
-      "optional": true
+      "smol-toml": true
     },
     "fs-jetpack": {
       "optional": true
     },
     "json5": {
       "optional": true
-    },
-    "miniflare": {
-      "smol-toml": true
     }
   },
-  "packageManager": "pnpm@10.15.1",
+  "packageManager": "pnpm@10.33.2",
   "pnpm": {
     "onlyBuiltDependencies": [
       "sharp",

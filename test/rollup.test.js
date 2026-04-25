@@ -263,7 +263,7 @@ export default Collection`Rollup Plugin`({
       .call(() => dbFetch(ctx.env.DB, 'insert_existing_role', ...ctx.queries.insert_role(ctx.env.DB,
         { roleId: 1, roleName: 'Admin' },
         { roleId: 4, roleName: 'Moderator' })))
-      .throws($, 'D1_ERROR: UNIQUE constraint failed: Roles.roleId: SQLITE_CONSTRAINT');
+      .throws($, 'D1_ERROR: UNIQUE constraint failed: Roles.roleId: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_PRIMARYKEY)');
 
     // Validate that the transaction stopped the moderator from being inserted.
     await $check`Verify transaction rollback`

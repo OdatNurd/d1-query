@@ -90,7 +90,7 @@ export default Collection`Raw Data Queries`({
                                       [75, "neverseeme", true],
                                       [73, "bohjimbo", 0]),
         'raw_test_seven'))
-      .throws($, 'D1_ERROR: UNIQUE constraint failed: Users.userId: SQLITE_CONSTRAINT');
+      .throws($, 'D1_ERROR: UNIQUE constraint failed: Users.userId: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_PRIMARYKEY)');
 
     // Now try to select the data that the previous batch would have inserted if
     // it did not fail; this tests that batches are properly wrapped in
