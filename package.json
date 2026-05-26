@@ -65,11 +65,8 @@
       "optional": true
     }
   },
-  "packageManager": "pnpm@10.33.2",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "workerd"
-    ]
+  "packageManager": "pnpm@11.3.0",
+  "dependencies": {
+    "sql-parser-cst": "^0.42.0"
   }
 }

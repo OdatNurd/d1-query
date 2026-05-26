@@ -20,98 +20,98 @@ export default Collection`Statement Preparation`({
     // A simple anonymous bind should be correctly identified.
     $check`Anonymous Bind`
       .value(processSQLString('SELECT * FROM Users WHERE userId = ? AND username = ?;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ? AND "username" = ?')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ? AND username = ?')
       .bindType($, BIND_STYLE_ANONYMOUS)
       .argCount($, 2);
 
     // Numbered binds should be correctly identified.
     $check`Numbered binds`
       .value(processSQLString('SELECT * FROM Users WHERE userId = ?1 AND username = ?2;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?2')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?2')
       .bindType($, BIND_STYLE_NUMBERED)
       .argCount($, 2);
 
     // Numbered binds with a gap should report the highest number as the count.
     $check`Numbered binds with a gap`
       .value(processSQLString('SELECT * FROM Users WHERE userId = ?1 AND username = ?3;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?3')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?3')
       .bindType($, BIND_STYLE_NUMBERED)
       .argCount($, 3);
 
     // Numbered binds out of order should report the highest number as the count.
     $check`Numbered binds out of order`
       .value(processSQLString('SELECT * FROM Users WHERE userId = ?3 AND username = ?1;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?3 AND "username" = ?1')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?3 AND username = ?1')
       .bindType($, BIND_STYLE_NUMBERED)
       .argCount($, 3);
 
     // A simple named bind should be correctly identified and mapped.
     $check`Named binds using colon`
       .value(processSQLString('SELECT * FROM Users WHERE userId = :id AND username = :name;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?2')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?2')
       .bindType($, BIND_STYLE_NAMED)
       .argNames($, { id: 0, name: 1 });
 
     // This should also work with a $
     $check`Named binds using dollar`
       .value(processSQLString('SELECT * FROM Users WHERE userId = $id AND username = $name;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?2')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?2')
       .bindType($, BIND_STYLE_NAMED)
       .argNames($, { id: 0, name: 1 });
 
     // This should also work with a @
     $check`Named binds using at-sign`
       .value(processSQLString('SELECT * FROM Users WHERE userId = @id AND username = @name;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?2')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?2')
       .bindType($, BIND_STYLE_NAMED)
       .argNames($, { id: 0, name: 1 });
 
     // Anonymous binds in LIMIT and OFFSET
     $check`Anonymous binds in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT ? OFFSET ?;'))
-      .eq($.sql, 'SELECT * FROM "Users" LIMIT ? OFFSET ?')
+      .eq($.sql, 'SELECT * FROM Users LIMIT ? OFFSET ?')
       .bindType($, BIND_STYLE_ANONYMOUS)
       .argCount($, 2);
 
     // Numbered binds in LIMIT and OFFSET
     $check`Numbered binds in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT ?1 OFFSET ?2;'))
-      .eq($.sql, 'SELECT * FROM "Users" LIMIT ?1 OFFSET ?2')
+      .eq($.sql, 'SELECT * FROM Users LIMIT ?1 OFFSET ?2')
       .bindType($, BIND_STYLE_NUMBERED)
       .argCount($, 2);
 
     // Named binds (colon) in LIMIT and OFFSET
     $check`Named binds (colon) in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT :count OFFSET :start;'))
-      .eq($.sql, 'SELECT * FROM "Users" LIMIT ?1 OFFSET ?2')
+      .eq($.sql, 'SELECT * FROM Users LIMIT ?1 OFFSET ?2')
       .bindType($, BIND_STYLE_NAMED)
       .argNames($, { count: 0, start: 1 });
 
     // Named binds (dollar) in LIMIT and OFFSET
     $check`Named binds (dollar) in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT $count OFFSET $start;'))
-      .eq($.sql, 'SELECT * FROM "Users" LIMIT ?1 OFFSET ?2')
+      .eq($.sql, 'SELECT * FROM Users LIMIT ?1 OFFSET ?2')
       .bindType($, BIND_STYLE_NAMED)
       .argNames($, { count: 0, start: 1 });
 
     // Named binds (at-sign) in LIMIT and OFFSET
     $check`Named binds (at-sign) in LIMIT and OFFSET`
       .value(processSQLString('SELECT * FROM Users LIMIT @count OFFSET @start;'))
-      .eq($.sql, 'SELECT * FROM "Users" LIMIT ?1 OFFSET ?2')
+      .eq($.sql, 'SELECT * FROM Users LIMIT ?1 OFFSET ?2')
       .bindType($, BIND_STYLE_NAMED)
       .argNames($, { count: 0, start: 1 });
 
     // Repeated named binds should result in a single parameter entry in the metadata.
     $check`Repeated named binds using colon`
       .value(processSQLString('SELECT * FROM Users WHERE userId = :id AND username = :id;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?1')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?1')
       .bindType($, BIND_STYLE_NAMED)
       .argNames($, ['id']);
 
     // This should also work if we use a dollar sign.
     $check`Repeated named binds using dollar`
       .value(processSQLString('SELECT * FROM Users WHERE userId = $id AND username = $id;'))
-      .eq($.sql, 'SELECT * FROM "Users" WHERE "userId" = ?1 AND "username" = ?1')
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?1')
       .bindType($, BIND_STYLE_NAMED)
       .argNames($, ['id']);
 
@@ -156,18 +156,18 @@ export default Collection`Statement Preparation`({
     // Multiple statements should throw an error by default.
     $check`Multiple statements not allowed by default`
       .call(() => processSQLString('SELECT 1; SELECT 2;'))
-      .throws($, 'multiple statements found, but allowMutliple is false');
+      .throws($, 'multiple statements found, but allowMultiple is false');
 
     // Multiple statements should be allowed when the flag is passed.
     $check`Multiple statements allowed when requested`
-      .value(processSQLString('SELECT 1; SELECT 2;', true))
+      .value(processSQLString('SELECT 1; SELECT 2;', 'test_action', true))
       .isArray()
       .eq($.length, 2);
 
     // A single statement with a trailing semicolon should still be treated as a
     // single statement.
     $check`Single statement with trailing semicolon is a single statement`
-      .value(processSQLString('SELECT 1;', true))
+      .value(processSQLString('SELECT 1;', 'test_action', true))
       .isArray()
       .eq($.length, 1);
   },
@@ -256,17 +256,17 @@ export default Collection`Statement Preparation`({
       .value(processSQLString('SELECT * FROM Users;').canProduceResult)
       .eq($, true);
 
-    // $check`PRAGMA statement`
-    //   .value(processSQLString('PRAGMA table_info(Users);').canProduceResult)
-    //   .eq($, true);
+    $check`PRAGMA statement`
+      .value(processSQLString('PRAGMA table_info(Users);').canProduceResult)
+      .eq($, true);
 
-    // $check`EXPLAIN statement`
-    //   .value(processSQLString('EXPLAIN SELECT * FROM Users;').canProduceResult)
-    //   .eq($, true);
+    $check`EXPLAIN statement`
+      .value(processSQLString('EXPLAIN SELECT * FROM Users;').canProduceResult)
+      .eq($, true);
 
-    // $check`VALUES statement`
-    //   .value(processSQLString('VALUES (1, 2), (3, 4);').canProduceResult)
-    //   .eq($, true);
+    $check`VALUES statement`
+      .value(processSQLString('VALUES (1, 2), (3, 4);').canProduceResult)
+      .eq($, true);
 
     $check`INSERT with RETURNING`
       .value(processSQLString('INSERT INTO Users (name) VALUES ("test") RETURNING *;').canProduceResult)
@@ -309,9 +309,9 @@ export default Collection`Statement Preparation`({
       .value(processSQLString('CREATE INDEX idx_name ON Users (name);').canProduceResult)
       .eq($, false);
 
-    // $check`DROP INDEX statement`
-    //   .value(processSQLString('DROP INDEX idx_name;').canProduceResult)
-    //   .eq($, false);
+    $check`DROP INDEX statement`
+      .value(processSQLString('DROP INDEX idx_name;').canProduceResult)
+      .eq($, false);
   }
 });
 

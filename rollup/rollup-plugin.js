@@ -75,7 +75,7 @@ export default function d1sql() {
       // us an array of objects that contain the modified SQL and the metadata
       // on their binds (if any).
       const sqlContent = readFileSync(id, 'utf8');
-      const statements = processSQLString(sqlContent, true);
+      const statements = processSQLString(sqlContent, id, true);
 
       // Determine which of the statements in the processed statement array take
       // bind arguments.

@@ -66,29 +66,29 @@ database_id = "9c171c69-1142-1234-b2f4-e1e5d9c81928"
 
 ```js
 // Prepare a single statement for later execution
-const stmt1 = dbPrepareStatements(ctx.env.DB,
+const stmt1 = dbPrepareStatements(ctx.env.DB, 'stmt1',
     'SELECT * FROM Users'
 );
 
 // Single statement, but searching for a specific user via anonymous
 // binds, which are provided via array.
-const stmt2 = dbPrepareStatements(ctx.env.DB,
-    'SELECT * FROM Users WHERE userId = ? OR username = ?'
+const stmt2 = dbPrepareStatements(ctx.env.DB, 'stmt2',
+    'SELECT * FROM Users WHERE userId = ? OR username = ?',
     [1, 'bob']
 );
 
 // Another single statement, augmented to use named binds instead;
 // here the binds are provided via an object.
-const stmt3 = dbPrepareStatements(ctx.env.DB,
+const stmt3 = dbPrepareStatements(ctx.env.DB, 'stmt3',
     `SELECT * FROM Users WHERE userId = :userId
-                            OR username = :userName`
+                            OR username = :userName`,
     { userId: 69, userName: 'jim'}
 );
 
 // Once a statement has been prepared once, you can re-use it and bind
 // it to different arguments; this does not need to recompile the SQL;
 // this works for any statement that takes bind parameters.
-const stmt4 = dbPrepareStatements(ctx.env.DB, stmt2,
+const stmt4 = dbPrepareStatements(ctx.env.DB, 'stmt4', stmt2,
     [69, 'jim']
 );
 
@@ -96,7 +96,7 @@ const stmt4 = dbPrepareStatements(ctx.env.DB, stmt2,
 // bound to multiple sets of bind values at once, producing an array
 // of statements that can executed singly or via a batch operation,
 // which implicitly wraps the execution in a transaction.
-const inserts = await dbPrepareStatements(ctx.env.DB,
+const inserts = await dbPrepareStatements(ctx.env.DB, 'inserts',
     `INSERT INTO Users (userId, username)
                 VALUES (:userId, :userName)`,
 
@@ -458,11 +458,15 @@ to simplify testing database-related logic.
 ## Library Methods
 
 ```js
-export function dbPrepareStatements(db, ...sqlargs) {}
+export function dbPrepareStatements(db, action, ...sqlargs) {}
 ```
 
 Given a database binding and an array of `sqlargs` (see below), return back a
 prepared statement or statements ready to be executed on the given database.
+
+The given action is free-form text and is used to distinguish the  source of
+the SQL being prepared in case any errors are detected; if the source SQL comes
+from a file on disk, you would use the filename here, for example.
 
 The provided `sqlargs` are an open ended array that can consist of:
 
@@ -559,14 +563,3 @@ as if that statement was the only statement executed.
 This is a convenience around executing a batch of statements that contain
 setup statements that don't return values and one that does without having to
 closely track the order and count of the statements.
-
-
-## Acknowledgements
-
-This project includes a modified SQL parser derived from the node-sql-parser`
-library, which is licensed under the Apache License 2.0. The original project
-can be found at [https://github.com/taozhi8833998/node-sql-
-parser](https://github.com/taozhi8833998/node-sql-parser).
-
-A copy of the Apache License 2.0 is included in this repository as `LICENSE
-.node-sql-parser`.

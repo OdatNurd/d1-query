@@ -2,7 +2,7 @@
 
 
 import { addCheck } from '@axel669/aegis';
-import { Parser } from '../lib/sqlite.js';
+import { parse, show } from 'sql-parser-cst';
 import { SQLStatement } from '../lib/statement.js';
 import fs from 'fs-jetpack';
 
@@ -49,7 +49,7 @@ export function initializeD1Checks() {
       // When the input is an array, the names in the array must exactly match
       // against every named bind, although we do not verify the order that
       // they appear.
-      if (Array.isArray(expectedNames)) {
+      if (Array.isArray(expectedNames) === true) {
         if (paramKeys.length !== expectedNames.length) {
           return false;
         }
@@ -87,19 +87,33 @@ export function initializeD1Checks() {
  * proceed with testing if the database is not appropriately set up. */
 export async function execSQLFiles(db, sqlFiles) {
   // If sqlFiles is not provided, do nothing.
-  if (!sqlFiles) {
+  if (sqlFiles === undefined || sqlFiles === null || sqlFiles === '') {
     return;
   }
 
-  const files = Array.isArray(sqlFiles) ? sqlFiles : [sqlFiles];
-  const parser = new Parser();
+  const files = Array.isArray(sqlFiles) === true ? sqlFiles : [sqlFiles];
 
   for (const file of files) {
     const setup = fs.read(file, 'utf8');
-    const ast = parser.astify(setup);
+    const cst = parse(setup, {
+      dialect: 'sqlite',
+      includeSpaces: true,
+      includeNewlines: false,
+      includeComments: false,
+      filename: file
+    });
 
-    for (const statement of ast) {
-      const sql = parser.sqlify(statement);
+    for (const statement of cst.statements) {
+      if (statement.type === 'empty') {
+        continue;
+      }
+
+      const sql = show(statement).trim();
+
+      if (sql === '') {
+        continue;
+      }
+
       console.log(`> ${sql}`);
       await db.exec(sql);
     }

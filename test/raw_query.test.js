@@ -16,7 +16,7 @@ export default Collection`Raw Data Queries`({
     // Testing that a single result arrives as expected
     await $check`SELECT a single row`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 1;'),
+        dbPrepareStatements(ctx.env.DB, 'raw_test_one', 'SELECT * FROM Users WHERE userId = 1;'),
         'raw_test_one'))
       .isArray()
       .eq($[0].userId, 1)
@@ -25,7 +25,7 @@ export default Collection`Raw Data Queries`({
     // Testing that multiple results arrive as expected.
     await $check`SELECT two rows`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId IN (1, 69) ORDER BY userId ASC;'),
+        dbPrepareStatements(ctx.env.DB, 'raw_test_two', 'SELECT * FROM Users WHERE userId IN (1, 69) ORDER BY userId ASC;'),
         'raw_test_two'))
       .isArray()
       .eq($[0].userId, 1)
@@ -36,7 +36,7 @@ export default Collection`Raw Data Queries`({
     // Inserts produce an empty data set.
     await $check`INSERT single row`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'INSERT INTO Users VALUES(70, "bobert", true);'),
+        dbPrepareStatements(ctx.env.DB, 'raw_test_three', 'INSERT INTO Users VALUES(70, "bobert", true);'),
         'raw_test_three'))
       .isArray()
       .eq($.length, 0);
@@ -45,7 +45,7 @@ export default Collection`Raw Data Queries`({
     // values.
     await $check`INSERT two rows as batch`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'INSERT INTO Users VALUES(?1, ?2, ?3);',
+        dbPrepareStatements(ctx.env.DB, 'raw_test_four', 'INSERT INTO Users VALUES(?1, ?2, ?3);',
                                       [71, "jimbo", 1],
                                       [72, "frankbert", false]),
         'raw_test_four'))
@@ -58,7 +58,7 @@ export default Collection`Raw Data Queries`({
     // be returned since it is inserting prior to selecting.
     await $check`INSERT/SELECT as a batch`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'INSERT INTO Users VALUES(?1, ?2, ?3);',
+        dbPrepareStatements(ctx.env.DB, 'raw_test_five', 'INSERT INTO Users VALUES(?1, ?2, ?3);',
                                       [73, "bohjimbo", 0],
                                     'SELECT * FROM Users WHERE userId = 73;'),
         'raw_test_five'))
@@ -73,7 +73,7 @@ export default Collection`Raw Data Queries`({
     // find the data because it selects before it adds the data.
     await $check`SELECT/INSERT as a batch`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 74;',
+        dbPrepareStatements(ctx.env.DB, 'raw_test_six', 'SELECT * FROM Users WHERE userId = 74;',
                                     'INSERT INTO Users VALUES(?1, ?2, ?3);',
                                       [74, "jimbozo", true]),
         'raw_test_six'))
@@ -86,7 +86,7 @@ export default Collection`Raw Data Queries`({
     // already exists; as a result this should fail.
     await $check`INSERT new data and try to reinsert old data`
       .call(async () => dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'INSERT INTO Users VALUES(?1, ?2, ?3);',
+        dbPrepareStatements(ctx.env.DB, 'raw_test_seven', 'INSERT INTO Users VALUES(?1, ?2, ?3);',
                                       [75, "neverseeme", true],
                                       [73, "bohjimbo", 0]),
         'raw_test_seven'))
@@ -97,7 +97,7 @@ export default Collection`Raw Data Queries`({
     // transactions.
     await $check`SELECT row that should not exist due to transaction rollback`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 75;'),
+        dbPrepareStatements(ctx.env.DB, 'raw_test_eight', 'SELECT * FROM Users WHERE userId = 75;'),
         'raw_test_eight'))
       .isArray()
       .eq($.length, 0);
@@ -106,7 +106,7 @@ export default Collection`Raw Data Queries`({
     // works as expected.
     await $check`Boolean Conversions`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, `SELECT * FROM Users
+        dbPrepareStatements(ctx.env.DB, 'raw_test_nine', `SELECT * FROM Users
                                      WHERE userId IN (70, 71, 72, 73)
                                      ORDER BY userId ASC;`),
         'raw_test_nine'))
@@ -156,7 +156,7 @@ export default Collection`Raw Data Queries`({
     await $check`Batch with one undefined statement`
       .value(dbRawQuery(ctx.env.DB,
         [
-          dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 1;'),
+          dbPrepareStatements(ctx.env.DB, 'raw_fail_test_six', 'SELECT * FROM Users WHERE userId = 1;'),
           undefined
         ],
         'raw_fail_test_six'))
@@ -167,7 +167,7 @@ export default Collection`Raw Data Queries`({
     await $check`Batch with one null statement`
       .value(dbRawQuery(ctx.env.DB,
         [
-          dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 1;'),
+          dbPrepareStatements(ctx.env.DB, 'raw_fail_test_seven', 'SELECT * FROM Users WHERE userId = 1;'),
           null
         ],
         'raw_fail_test_seven'))
@@ -176,7 +176,7 @@ export default Collection`Raw Data Queries`({
     // Selecting where the statement consists of invalid SQL.
     await $check`Query with invalid SQL`
       .call(() => dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELUCT * FROM Users WHERE userId = 1;'),
+        dbPrepareStatements(ctx.env.DB, 'raw_fail_test_eight', 'SELUCT * FROM Users WHERE userId = 1;'),
         'raw_fail_test_eight'))
       .throws($, 'invalid SQL syntax');
 
@@ -184,29 +184,32 @@ export default Collection`Raw Data Queries`({
     // error.
     await $check`Query with unknown table name`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELECT * FROM NotRealltyUsers WHERE userId = 1;'),
+        dbPrepareStatements(ctx.env.DB, 'raw_fail_test_nine', 'SELECT * FROM NotRealltyUsers WHERE userId = 1;'),
         'raw_fail_test_nine'))
       .throws($, 'D1_ERROR: no such table: NotRealltyUsers: SQLITE_ERROR');
 
     // Binding with the wrong number of arguments should cause a failure.
     await $check`Statement with not enough bind arguments`
       .value(dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = ?;'),
+        dbPrepareStatements(ctx.env.DB, 'raw_fail_test_ten', 'SELECT * FROM Users WHERE userId = ?;'),
         'raw_fail_test_ten'))
       .throws($, 'D1_ERROR: Wrong number of parameter bindings for SQL query.');
 
     // Same test as above, but testing with too many instead of too few.
     await $check`Statement with too many bind arguments`
       .call(() => dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = ?;', [1, 2]),
+        dbPrepareStatements(ctx.env.DB, 'raw_fail_test_eleven', 'SELECT * FROM Users WHERE userId = ?;', [1, 2]),
         'raw_fail_test_eleven'))
       .throws($, 'incorrect number of bind parameters; expected 1, got 2');
 
     // Same test as above, but testing with args then none are required.
     await $check`Statement with bind arguments when not required`
       .call(() => dbRawQuery(ctx.env.DB,
-        dbPrepareStatements(ctx.env.DB, 'SELECT * FROM Users WHERE userId = 1;', [1, 2]),
-        'raw_fail_test_eleven'))
+        dbPrepareStatements(ctx.env.DB, 'raw_fail_test_twelve', 'SELECT * FROM Users WHERE userId = 1;', [1, 2]),
+        'raw_fail_test_twelve'))
       .throws($, 'statement does not accept any bind parameters');
   },
 });
+
+
+/******************************************************************************/
