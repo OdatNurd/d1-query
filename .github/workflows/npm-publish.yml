@@ -21,5 +21,6 @@ jobs:
       package-version: ${{ (github.event_name == 'workflow_dispatch' && inputs.tag) || github.ref_name }}
       create-release: true
       test-script: 'test'
+      build-script: 'build:vendor'
     secrets:
       npm-auth-token: ${{ secrets.NPM_PUBLISH }}

@@ -18,14 +18,14 @@
     "./aegis": "./aegis/index.js"
   },
   "scripts": {
+    "build:vendor": "rollup -c rollup.vendor.config.js",
     "test": "aegis test/aegis.config.js"
   },
   "files": [
     "lib",
     "rollup",
     "aegis",
-    "LICENSE",
-    "LICENCE-node-sql-parser"
+    "LICENSE"
   ],
   "keywords": [
     "cloudflare",
@@ -34,11 +34,15 @@
   "devDependencies": {
     "@axel669/aegis": "^0.3.1",
     "@odatnurd/cf-aegis": "^0.1.9",
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
     "fs-jetpack": "^5.1.0",
     "json5": "^2.2.3",
     "miniflare": "^4.20260424.0",
     "rollup": "^4.45.1",
-    "smol-toml": "^1.6.1"
+    "smol-toml": "^1.6.1",
+    "sql-parser-cst": "^0.42.0"
   },
   "peerDependencies": {
     "@axel669/aegis": "^0.3.1",
@@ -65,8 +69,5 @@
       "optional": true
     }
   },
-  "packageManager": "pnpm@11.3.0",
-  "dependencies": {
-    "sql-parser-cst": "^0.42.0"
-  }
+  "packageManager": "pnpm@11.3.0"
 }

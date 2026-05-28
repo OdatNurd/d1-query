@@ -2,7 +2,7 @@
 
 
 import { addCheck } from '@axel669/aegis';
-import { parse, show } from 'sql-parser-cst';
+import { parse, show } from '../lib/sqlite.js';
 import { SQLStatement } from '../lib/statement.js';
 import fs from 'fs-jetpack';
 
