@@ -1,0 +1,26 @@
+name: Update Homepage on Package Publish
+
+on:
+  workflow_run:
+    workflows: ["Publish to NPMJS"]
+    types:
+      - completed
+
+jobs:
+  trigger-astro:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Allow NPM Registry to Settle
+        # Give npmjs a chance to index the new package before we kick off the
+        # build so that the new version is picked up.
+        run: sleep 60
+
+      - name: Trigger Astro Site Rebuild
+        env:
+          GH_TOKEN: ${{ secrets.ASTRO_SITE_TRIGGER_TOKEN }}
+        run: |
+          gh workflow run deploy_astro.yml \
+            --repo OdatNurd/astro-homepage \
+            --ref published \
+            -f use_api_cache=false

@@ -15,7 +15,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    uses: odatnurd/github-workflows/.github/workflows/npm-publish.yaml@npm-publish-v1.0.3
+    uses: odatnurd/github-workflows/.github/workflows/npm-publish.yaml@npm-publish-v1.0.4
     with:
       node-version: 24
       package-version: ${{ (github.event_name == 'workflow_dispatch' && inputs.tag) || github.ref_name }}
