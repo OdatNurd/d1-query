@@ -23,4 +23,4 @@ jobs:
           gh workflow run deploy_astro.yml \
             --repo OdatNurd/astro-homepage \
             --ref published \
-            -f use_api_cache=false
+            -f clear_npm_cache=true
