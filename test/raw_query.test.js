@@ -177,28 +177,33 @@ export default Collection`Raw Data Queries`({
 
 
   /* This set of tests validates that we correctly catch errors in fetch calls
-   * that relate to the statements provided not being valid. */
+   * that relate to the statements provided not being valid.
+   *
+   * The checks below only require that an error is raised, not which text it
+   * carries. Passed the wrong input the library dereferences it, so the message
+   * is the platform's wording for that dereference, which is not something this
+   * package controls or promises to keep. */
   "Raw Query Failures": async ({ runScope: ctx}) => {
     // Selecting with no statement should fail.
     await $check`SELECT with an undefined statement`
       .value(dbRawQuery(ctx.env.DB, undefined, 'raw_fail_test_one'))
-      .throws($, "Cannot read properties of undefined (reading 'statement')");
+      .throws($);
 
     // With more than one undefined statement, the error changes because it is
     // a batch and is handled differently.
     await $check`Batch of undefined statements`
       .value(dbRawQuery(ctx.env.DB, [undefined], 'raw_fail_test_two'))
-      .throws($, "Cannot read properties of undefined (reading 'statement')");
+      .throws($);
 
     // Selecting with a null statement should fail too.
     await $check`SELECT with a null statement`
       .value(dbRawQuery(ctx.env.DB, null, 'raw_fail_test_three'))
-      .throws($, "Cannot read properties of null (reading 'statement')");
+      .throws($);
 
     // Selecting with a null statement should fail too.
     await $check`Batch of null statements`
       .value(dbRawQuery(ctx.env.DB, [null], 'raw_fail_test_four'))
-      .throws($, "Cannot read properties of null (reading 'statement')");
+      .throws($);
 
     // Selecting with an empty batch
     await $check`Batch that is empty`
@@ -214,7 +219,7 @@ export default Collection`Raw Data Queries`({
           undefined
         ],
         'raw_fail_test_six'))
-      .throws($, "Cannot read properties of undefined (reading 'statement')");
+      .throws($);
 
     // If one of the items in the batch is null, it should behave like they
     // all are.
@@ -225,7 +230,7 @@ export default Collection`Raw Data Queries`({
           null
         ],
         'raw_fail_test_seven'))
-      .throws($, "Cannot read properties of null (reading 'statement')");
+      .throws($);
 
     // Selecting where the statement consists of invalid SQL.
     await $check`Query with invalid SQL`
