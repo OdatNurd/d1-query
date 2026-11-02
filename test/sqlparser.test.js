@@ -45,6 +45,40 @@ export default Collection`Statement Preparation`({
       .bindType($, BIND_STYLE_NUMBERED)
       .argCount($, 3);
 
+    // Numbered binds can also be written with a dollar sign; these are the same
+    // style as ?NNN binds and are rewritten to them, since D1 does not accept
+    // the $nr form.
+    $check`Numbered binds using dollar`
+      .value(processSQLString('SELECT * FROM Users WHERE userId = $1 AND username = $2;'))
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?2')
+      .bindType($, BIND_STYLE_NUMBERED)
+      .argCount($, 2);
+
+    // Dollar numbered binds with a gap should report the highest number.
+    $check`Numbered binds using dollar with a gap`
+      .value(processSQLString('SELECT * FROM Users WHERE userId = $1 AND username = $3;'))
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?3')
+      .bindType($, BIND_STYLE_NUMBERED)
+      .argCount($, 3);
+
+    // Mixing dollar numbered binds with question numbered binds is not mixing
+    // styles; both are the numbered style.
+    $check`Dollar and question numbered binds are the same style`
+      .value(processSQLString('SELECT * FROM Users WHERE userId = $1 AND username = ?2;'))
+      .eq($.sql, 'SELECT * FROM Users WHERE userId = ?1 AND username = ?2')
+      .bindType($, BIND_STYLE_NUMBERED)
+      .argCount($, 2);
+
+    // Bind indexes are 1 based; 0 is not a valid index and would otherwise be
+    // reported as a statement with no binds at all.
+    $check`Numbered bind of zero`
+      .call(() => processSQLString('SELECT * FROM Users WHERE userId = ?0;'))
+      .throws($, "invalid bind parameter '?0'");
+
+    $check`Dollar numbered bind of zero`
+      .call(() => processSQLString('SELECT * FROM Users WHERE userId = $0;'))
+      .throws($, "invalid bind parameter '$0'");
+
     // A simple named bind should be correctly identified and mapped.
     $check`Named binds using colon`
       .value(processSQLString('SELECT * FROM Users WHERE userId = :id AND username = :name;'))
@@ -170,6 +204,26 @@ export default Collection`Statement Preparation`({
       .value(processSQLString('SELECT 1;', 'test_action', true))
       .isArray()
       .eq($.length, 1);
+
+    // A string with no SQL in it has no statements to process; report that
+    // rather than returning undefined and letting the caller fail on it later.
+    $check`Empty SQL string`
+      .call(() => processSQLString(''))
+      .throws($, 'no SQL statements found');
+
+    $check`Whitespace only SQL string`
+      .call(() => processSQLString('   \n\t  '))
+      .throws($, 'no SQL statements found');
+
+    $check`Comment only SQL string`
+      .call(() => processSQLString('-- nothing to see here\n'))
+      .throws($, 'no SQL statements found');
+
+    // The same is true when multiple statements are allowed, since an empty SQL
+    // file cannot produce a query module.
+    $check`Empty SQL string when multiple statements are allowed`
+      .call(() => processSQLString('', 'test_action', true))
+      .throws($, 'no SQL statements found');
   },
 
 
