@@ -19,6 +19,7 @@ initializeD1Checks();
 
 export const config = {
   files: [
+    "test/package.test.js",
     "test/sqlparser.test.js",
     "test/compiler.test.js",
     "test/raw_query.test.js",
