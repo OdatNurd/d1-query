@@ -2,6 +2,7 @@ import { Collection, $check, $ } from "@axel669/aegis";
 
 import {
   processSQLString,
+  renderSQLStatements,
   mapBinds,
   BIND_STYLE_ANONYMOUS,
   BIND_STYLE_NUMBERED,
@@ -310,6 +311,58 @@ export default Collection`Statement Preparation`({
       .eq($[0], 'bob')
       .eq($[1], 1);
   },
+
+  /****************************************************************************/
+
+  /* This set of tests covers the rendering that the setup file helper uses:
+   * each statement comes back as the text to execute, with the comments and
+   * layout of the file dropped. */
+  "Statement Rendering": ({ runScope: ctx }) => {
+    $check`comments and layout are dropped`
+      .value(renderSQLStatements(`
+        -- create the table
+        CREATE TABLE Thing (
+          id INTEGER PRIMARY KEY,
+          name TEXT
+        );
+
+        /* seed it */
+        INSERT INTO Thing (name) VALUES ('one');
+      `))
+      .isArray()
+      .eq($.length, 2)
+      .eq($[0].includes('--'), false)
+      .eq($[0].includes('/*'), false)
+      .eq($[0].includes('CREATE TABLE Thing'), true)
+      .eq($[1].includes("'one'"), true);
+
+    // Trailing semicolons produce empty statements in the parser's output,
+    // which must not come back as statements to execute.
+    $check`trailing semicolons produce no statements`
+      .value(renderSQLStatements('SELECT 1;;'))
+      .isArray()
+      .eq($.length, 1);
+
+    $check`a file with only a comment has no statements`
+      .value(renderSQLStatements('-- nothing here\n'))
+      .isArray()
+      .eq($.length, 0);
+
+    // A trigger body contains semicolons of its own; the statement has to come
+    // back whole rather than being split at each of them.
+    $check`a trigger is kept as a single statement`
+      .value(renderSQLStatements(`
+        CREATE TRIGGER thing_audit AFTER INSERT ON Thing
+        BEGIN
+          INSERT INTO Thing (name) VALUES ('audit');
+        END;
+      `))
+      .isArray()
+      .eq($.length, 1)
+      .eq($[0].includes('BEGIN'), true)
+      .eq($[0].includes('END'), true);
+  },
+
 
   /****************************************************************************/
 

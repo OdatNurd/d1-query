@@ -2,8 +2,7 @@
 
 
 import { addCheck } from '@axel669/aegis';
-import { parse, show } from '../lib/sqlite.js';
-import { isSQLStatement } from '../lib/statement.js';
+import { isSQLStatement, renderSQLStatements } from '../lib/statement.js';
 import fs from 'fs-jetpack';
 
 
@@ -83,6 +82,11 @@ export function initializeD1Checks() {
  * No bindings are allowed here, and when multiple files are provided, they will
  * be loaded in the order they're provided to the call.
  *
+ * Each file is parsed into its statements, and the statements are then executed
+ * one at a time. There is no transaction wrapped around the file or around the
+ * set of files, so a file that fails partway leaves the database partly set up;
+ * wrap the call in a transaction if the setup has to be all or nothing.
+ *
  * If this fails, an exception will be raised, since you usually do not want to
  * proceed with testing if the database is not appropriately set up. */
 export async function execSQLFiles(db, sqlFiles) {
@@ -103,25 +107,9 @@ export async function execSQLFiles(db, sqlFiles) {
       throw new Error(`cannot read SQL setup file: ${file}`);
     }
 
-    const cst = parse(setup, {
-      dialect: 'sqlite',
-      includeSpaces: true,
-      includeNewlines: false,
-      includeComments: false,
-      filename: file
-    });
+    const statements = renderSQLStatements(setup, file);
 
-    for (const statement of cst.statements) {
-      if (statement.type === 'empty') {
-        continue;
-      }
-
-      const sql = show(statement).trim();
-
-      if (sql === '') {
-        continue;
-      }
-
+    for (const sql of statements) {
       console.log(`> ${sql}`);
       await db.exec(sql);
     }
