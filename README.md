@@ -23,17 +23,20 @@ you are undertaking.
 
 Being based on `SQLite`, `D1` allows you to use
 [bound parameters](https://www.sqlite.org/lang_expr.html#parameters) in your
-queries for data safety and to allow easy statement reuse. However, as
-(currently) implemented by `D1`, only anonymous (`?`) binds are allowed.
+queries for data safety and to allow easy statement reuse. As of this writing,
+`D1` accepts `?` and `?NNN` binds but not named binds (`:name`, `$name`,
+`@name`).
 
 `d1-query` contains a built in wrapper that allows you to use all styles of
 binds in your queries, transforming such queries on the fly into a version that
 `D1` can understand, and allowing you to create more readable and
 understandable queries.
 
-> ⚠️ Although it is technically value SQL to mix different types of binding
-> parameters together within the same statement, `d1-query` forcibly disallows
-> this, requiring you to be consistent with how you bind. You're welcome.
+> ⚠️ `d1-query` rejects mixing different styles of binding parameters within the
+> same statement; you have to be consistent with how you bind. `SQLite` itself
+> allows mixing, and each style is supported here on its own, so this is a
+> deliberate restriction imposed by the wrapper rather than a limitation of
+> `SQLite`. You're welcome.
 
 > ℹ️ In order to accomplish this, your SQL must be parsed by the library before
 > it is handed over to `D1` to execute. This parse will only happen once (if you
@@ -41,6 +44,11 @@ understandable queries.
 >
 > When using the [Rollup plugin](#rollup-plugin) that ships with the package,
 > this step happens during bundling and not at runtime, removing this overhead.
+>
+> Because your SQL is parsed and then re-rendered, the statement that reaches
+> `D1` is the parser's rendering of it rather than a byte for byte copy of your
+> file. Formatting is preserved where the parser can manage it, but do not rely
+> on the text being identical.
 
 
 ## Installation
@@ -178,8 +186,15 @@ result = await dbFetch(ctx.env.DB, 'insert_users',
 ```
 
 `dbFetchOne` is a convenience wrapper around `dbFetch`; here if the result of
-the query is no rows, `null` is returned; otherwise the return value is just
-the first result, even if there are many results returned.
+the query is no rows, `null` is returned; otherwise the return value is the
+first row of the result.
+
+When the input is a batch, the value returned is the entire result set of the
+first statement in the batch, which is an array of rows, and it is `[]` rather
+than `null` when that statement produced no rows.
+
+Use `dbFetchFirst` when you want the first row of whichever statement actually
+returns one.
 
 ```js
 let result = await dbFetch(ctx.env.DB, 'fetch_users',
@@ -359,8 +374,12 @@ To use these utilities, you must install the required peer dependencies into
 your own project's `devDependencies` if you have not already done so.
 
 ```sh
-pnpm add -D @axel669/aegis @odatnurd/cf-aegis miniflare fs-jetpack smol-toml json5
+pnpm add -D @axel669/aegis @odatnurd/cf-aegis miniflare fs-jetpack
 ```
+
+`@odatnurd/cf-aegis` also depends on `smol-toml` and `json5`; a package manager
+that does not install peer dependencies automatically will need those installed
+as well.
 
 The `@odatnurd/d1-query/aegis` module exports the following helper functions:
 
@@ -375,12 +394,12 @@ once at the top of your `aegis.config.js` file.
 ---
 
 ```javascript
-export async function execSQLFiles(db, sqlFiles = undefined) {}
+export async function execSQLFiles(db, sqlFiles) {}
 ```
 An async function that takes a database context from a Cloudflare worker and
 either the filename of a single SQL file, or an array of SQL filenames. It will
 read and execute each SQL file given in turn, raising an error if an error
-occurs.
+occurs; a file that cannot be read is reported by name.
 
 ---
 
@@ -443,7 +462,7 @@ to simplify testing database-related logic.
   `SQLStatement`.
 * `.bindType($, type)`: Assumes the value is an `SQLStatement` and checks that
   its `bindMetadata.style` property matches the provided string
-  (e.g., `'anonymous'`, `'named'`).
+  (e.g., `'anonymous'`, `'numbered'`, `'named'`).
 * `.argCount($, count)`: Assumes the value is an `SQLStatement` and checks that
   its `bindMetadata.argCount` property matches the provided number.
 * `.argNames($, names)`: Assumes the value is an `SQLStatement` with named
@@ -456,6 +475,16 @@ to simplify testing database-related logic.
 
 
 ## Library Methods
+
+Two behaviours apply to every query made through these methods:
+
+* Any returned field whose name is `is` followed by an upper case letter or an
+  underscore (such as `isCool` or `is_visible`) is converted from the integer
+  that `SQLite` stores into a boolean, but only when the value is `0` or `1`. A
+  `NULL` stays `NULL` and any other value is left alone.
+* Every query logs a line describing the action, its status and the rows read
+  and written. This logging is unconditional; there is no option to disable it
+  or to redirect it.
 
 ```js
 export function dbPrepareStatements(db, action, ...sqlargs) {}
