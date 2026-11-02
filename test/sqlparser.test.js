@@ -298,6 +298,17 @@ export default Collection`Statement Preparation`({
     $check`binds for statement with no parameters`
       .call(() => mapBinds(noParamsMeta, []))
       .throws($, 'statement does not accept any bind parameters');
+
+    // Properties that are inherited rather than owned are not bind arguments;
+    // iterating them makes an object that inherits from another look like it
+    // carries bind values that it does not.
+    $check`named binds ignore inherited properties`
+      .value(mapBinds(namedMeta, Object.assign(Object.create({ extra: 'inherited' }),
+        { name: 'bob', id: 1 })))
+      .isArray()
+      .eq($.length, 2)
+      .eq($[0], 'bob')
+      .eq($[1], 1);
   },
 
   /****************************************************************************/
