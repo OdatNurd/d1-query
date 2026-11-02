@@ -95,6 +95,14 @@ export async function execSQLFiles(db, sqlFiles) {
 
   for (const file of files) {
     const setup = fs.read(file, 'utf8');
+
+    // fs.read() returns undefined when the file is not there, and passing that
+    // to the parser reports a problem with the parser's input instead of the
+    // missing file that actually caused it.
+    if (setup === undefined) {
+      throw new Error(`cannot read SQL setup file: ${file}`);
+    }
+
     const cst = parse(setup, {
       dialect: 'sqlite',
       includeSpaces: true,

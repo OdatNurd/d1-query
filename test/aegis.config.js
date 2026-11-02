@@ -26,6 +26,7 @@ export const config = {
     "test/raw_query.test.js",
     "test/fetch.test.js",
     "test/logging.test.js",
+    "test/aegis_helpers.test.js",
     "test/rollup.test.js",
     "test/rollup_plugin_path.test.js",
   ],
