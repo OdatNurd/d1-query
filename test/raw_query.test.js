@@ -122,6 +122,60 @@ export default Collection`Raw Data Queries`({
   /****************************************************************************/
 
 
+  /* This set of tests validates the conversion of integer fields that are
+   * named as if they were booleans into actual boolean values.
+   *
+   * A field is converted only if its name starts with "is" and is followed by
+   * an upper case letter or an underscore, and only if its value is 0 or 1;
+   * any other value (including NULL) is left exactly as D1 provided it. */
+  "Boolean Field Conversion": async ({ runScope: ctx}) => {
+    // Fetch the rows in the Flags table, which is what contains the various
+    // shapes of boolean fields that we want to test against.
+    const flags = await dbRawQuery(ctx.env.DB,
+      dbPrepareStatements(ctx.env.DB, 'raw_bool_one',
+        'SELECT * FROM Flags ORDER BY id ASC;'),
+      'raw_bool_one');
+
+    // The first row has a true boolean, a false snake_case boolean, a NULL
+    // nullable boolean, and a number that happens to have a boolean name.
+    await $check`Converting boolean fields`
+      .value(flags[0])
+      .isObject($)
+      .eq($.isActive, true)
+      .eq($.is_visible, false)
+      .eq($.isEnabled, null)
+      .eq($.isCount, 2);
+
+    // The second row flips the first two values but keeps the rest.
+    await $check`Converting boolean fields, opposite values`
+      .value(flags[1])
+      .isObject($)
+      .eq($.isActive, false)
+      .eq($.is_visible, true)
+      .eq($.isEnabled, null)
+      .eq($.isCount, 5);
+
+    // A NULL must survive as NULL; converting it to a boolean would turn a
+    // missing value into a definite false.
+    await $check`Nullable boolean is not converted`
+      .value(flags.map(flag => flag.isEnabled))
+      .isArray()
+      .eq($[0], null)
+      .eq($[1], null);
+
+    // A field with a boolean name but a non-boolean value must be left alone so
+    // that the value is not silently lost.
+    await $check`Non-boolean value with boolean name is not converted`
+      .value(flags.map(flag => flag.isCount))
+      .isArray()
+      .eq($[0], 2)
+      .eq($[1], 5);
+  },
+
+
+  /****************************************************************************/
+
+
   /* This set of tests validates that we correctly catch errors in fetch calls
    * that relate to the statements provided not being valid. */
   "Raw Query Failures": async ({ runScope: ctx}) => {
