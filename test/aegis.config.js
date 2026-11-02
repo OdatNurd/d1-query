@@ -25,6 +25,7 @@ export const config = {
     "test/compiler.test.js",
     "test/raw_query.test.js",
     "test/fetch.test.js",
+    "test/logging.test.js",
     "test/rollup.test.js",
     "test/rollup_plugin_path.test.js",
   ],
