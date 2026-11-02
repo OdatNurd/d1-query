@@ -20,11 +20,13 @@ initializeD1Checks();
 export const config = {
   files: [
     "test/package.test.js",
+    "test/unused_imports.test.js",
     "test/sqlparser.test.js",
     "test/compiler.test.js",
     "test/raw_query.test.js",
     "test/fetch.test.js",
     "test/rollup.test.js",
+    "test/rollup_plugin_path.test.js",
   ],
   hooks: {
     setup: async (ctx) => {

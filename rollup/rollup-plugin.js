@@ -2,12 +2,9 @@
 
 
 import { readFileSync } from 'fs';
-import {
-  processSQLString,
-  SQLStatement,
-  SQLBindError,
-  mapBinds
-} from '../lib/index.js';
+import { fileURLToPath } from 'node:url';
+
+import { processSQLString } from '../lib/index.js';
 
 
 /******************************************************************************/
@@ -17,7 +14,17 @@ import {
 // the imported SQL. Per the documentation on plugins, the convention is to lead
 // with a null byte to make sure other plugins don't try to process it.
 const HELPER_MODULE_ID = '\0d1-sql-helpers';
-const HELPER_MODULE_PATH = new URL('./rollup-plugin-helper.js', import.meta.url).pathname;
+
+// A URL pathname is percent encoded, so using it directly as a filename breaks
+// as soon as the plugin lives somewhere with a space in the path (and drops the
+// leading slash from a Windows drive path).
+//
+// People who use spaces in filenames are a special form of evil entity, but
+// they should be allowed to use the library anyway. fileURLToPath converts it
+// back into the path the filesystem actually uses.
+const HELPER_MODULE_PATH = fileURLToPath(
+  new URL('./rollup-plugin-helper.js', import.meta.url)
+);
 
 
 /******************************************************************************/
