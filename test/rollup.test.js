@@ -1,5 +1,7 @@
 import { Collection, $check, $ } from "@axel669/aegis";
 import { rollup } from 'rollup';
+import fs from 'fs-jetpack';
+
 import rollupConfig from './rollup/rollup.config.js';
 import { dbFetch } from "../lib/index.js";
 
@@ -47,12 +49,19 @@ export default Collection`Rollup Plugin`({
    * expected and can generate an output file which can be imported and which
    * will contain the desired symbols. */
   "File Generation": async ({ runScope: ctx }) => {
-    // Invoking rollup to perform the build should result in a bundle; we only
-    // care that it doesn't throw an error, so the test here just ensures that
-    // it counts as a test for Aegis.
+    // Invoking rollup to perform the build should result in a bundle and, more
+    // to the point, should write the module that the rest of this collection
+    // imports.
+    //
+    // An earlier version of this check asserted that the result was an
+    // instanceof Object, which no value can fail.
     await $check`Execute rollup build`
       .call(() => runRollupBuild())
-      .instanceof($, Object);
+      .neq($, undefined);
+
+    $check`Rollup wrote the SQL module`
+      .value(fs.exists(rollupConfig.output.file))
+      .eq($, 'file');
 
     // We should be able to import the queries and end up with an object; this
     // is also placed into the context as queries.
@@ -318,77 +327,77 @@ export default Collection`Rollup Plugin`({
       .eq($.length, 1)
       .eq($[0].roleName, 'Admin');
 
-      await $check`fetchFirst() with a single result`
-        .value(ctx.queries.fetchFirst_single_result(ctx.env.DB, 'fetchFirst_test_one',
-          { roleId: 1 }))
-        .isNotArray()
-        .neq($, null)
-        .eq($.roleId, 1)
-        .eq($.roleName, "Admin");
+    await $check`fetchFirst() with a single result`
+      .value(ctx.queries.fetchFirst_single_result(ctx.env.DB, 'fetchFirst_test_one',
+        { roleId: 1 }))
+      .isNotArray()
+      .neq($, null)
+      .eq($.roleId, 1)
+      .eq($.roleName, "Admin");
 
-      // A batch where the first statement returns a result.
-      await $check`fetchFirst() with a batch, first statement returns`
-        .value(ctx.queries.fetchFirst_batch_first_returns(ctx.env.DB, 'fetchFirst_test_two',
-          { roleId1: 1, roleId2: 2 },
-          { roleId3: 500, roleName: 'Test Role'}))
-        .isNotArray()
-        .neq($, null)
-        .eq($.roleId, 1)
-        .eq($.roleName, "Admin");
+    // A batch where the first statement returns a result.
+    await $check`fetchFirst() with a batch, first statement returns`
+      .value(ctx.queries.fetchFirst_batch_first_returns(ctx.env.DB, 'fetchFirst_test_two',
+        { roleId1: 1, roleId2: 2 },
+        { roleId3: 500, roleName: 'Test Role'}))
+      .isNotArray()
+      .neq($, null)
+      .eq($.roleId, 1)
+      .eq($.roleName, "Admin");
 
-      // A batch where a later statement is the first to return a result.
-      await $check`fetchFirst() with a batch, later statement returns`
-        .value(ctx.queries.fetchFirst_batch_later_returns(ctx.env.DB, 'fetchFirst_test_three',
-          { roleId: 501, roleName: 'Test Role 2' },
-          { roleName: 'User' }))
-        .isNotArray()
-        .neq($, null)
-        .eq($.roleId, 2)
-        .eq($.roleName, "User");
+    // A batch where a later statement is the first to return a result.
+    await $check`fetchFirst() with a batch, later statement returns`
+      .value(ctx.queries.fetchFirst_batch_later_returns(ctx.env.DB, 'fetchFirst_test_three',
+        { roleId: 501, roleName: 'Test Role 2' },
+        { roleName: 'User' }))
+      .isNotArray()
+      .neq($, null)
+      .eq($.roleId, 2)
+      .eq($.roleName, "User");
 
-      // A batch where no statements return results.
-      await $check`fetchFirst() with no result-producing statements`
-        .value(ctx.queries.fetchFirst_no_results(ctx.env.DB, 'fetchFirst_test_four',
-          { roleId: 502, roleName: 'New Role 1' },
-          { roleId: 1, roleName: 'Admin' }))
-        .eq($, null);
+    // A batch where no statements return results.
+    await $check`fetchFirst() with no result-producing statements`
+      .value(ctx.queries.fetchFirst_no_results(ctx.env.DB, 'fetchFirst_test_four',
+        { roleId: 502, roleName: 'New Role 1' },
+        { roleId: 1, roleName: 'Admin' }))
+      .eq($, null);
 
-      // A query that returns multiple rows should still only return the first.
-      await $check`fetchFirst() that returns multiple rows`
-        .value(ctx.queries.fetchFirst_multiple_rows(ctx.env.DB, 'fetchFirst_test_five',
-          { roleId1: 1, roleId2: 2 }))
-        .isNotArray()
-        .neq($, null)
-        .eq($.roleId, 1)
-        .eq($.roleName, "Admin");
+    // A query that returns multiple rows should still only return the first.
+    await $check`fetchFirst() that returns multiple rows`
+      .value(ctx.queries.fetchFirst_multiple_rows(ctx.env.DB, 'fetchFirst_test_five',
+        { roleId1: 1, roleId2: 2 }))
+      .isNotArray()
+      .neq($, null)
+      .eq($.roleId, 1)
+      .eq($.roleName, "Admin");
 
-      // A query that returns no rows should return null.
-      await $check`fetchFirst() that returns no rows`
-        .value(ctx.queries.fetchFirst_no_rows(ctx.env.DB, 'fetchFirst_test_six',
-          { roleId: 1000 }))
-        .eq($, null);
+    // A query that returns no rows should return null.
+    await $check`fetchFirst() that returns no rows`
+      .value(ctx.queries.fetchFirst_no_rows(ctx.env.DB, 'fetchFirst_test_six',
+        { roleId: 1000 }))
+      .eq($, null);
 
-      // A batch where a later statement could return a result but doesn't.
-      await $check`fetchFirst() with a batch, potential but no result`
-        .value(ctx.queries.fetchFirst_potential_no_result(ctx.env.DB, 'fetchFirst_test_seven',
-          { roleId: 503, roleName: 'Test Role 3' },
-          { roleName: 'NonExistent' }))
-        .eq($, null);
+    // A batch where a later statement could return a result but doesn't.
+    await $check`fetchFirst() with a batch, potential but no result`
+      .value(ctx.queries.fetchFirst_potential_no_result(ctx.env.DB, 'fetchFirst_test_seven',
+        { roleId: 503, roleName: 'Test Role 3' },
+        { roleName: 'NonExistent' }))
+      .eq($, null);
 
-      // A batch with two statements that can return results, but neither do.
-      await $check`fetchFirst() with multiple potential results, but none found`
-        .value(ctx.queries.fetchFirst_multiple_potential_no_results(ctx.env.DB, 'fetchFirst_test_eight',
-          { roleId1: 1002 },
-          { roleId2: 1003 }))
-        .eq($, null);
+    // A batch with two statements that can return results, but neither do.
+    await $check`fetchFirst() with multiple potential results, but none found`
+      .value(ctx.queries.fetchFirst_multiple_potential_no_results(ctx.env.DB, 'fetchFirst_test_eight',
+        { roleId1: 1002 },
+        { roleId2: 1003 }))
+      .eq($, null);
 
-      // A batch where the first statement that can return a result doesn't, so
-      // the result is null even though a later statement does return a result.
-      await $check`fetchFirst() with a batch, first potential result is empty`
-        .value(ctx.queries.fetchFirst_first_potential_empty(ctx.env.DB, 'fetchFirst_test_nine',
-          { roleId1: 1004 },
-          { roleId2: 1 }))
-        .eq($, null);
+    // A batch where the first statement that can return a result doesn't, so
+    // the result is null even though a later statement does return a result.
+    await $check`fetchFirst() with a batch, first potential result is empty`
+      .value(ctx.queries.fetchFirst_first_potential_empty(ctx.env.DB, 'fetchFirst_test_nine',
+        { roleId1: 1004 },
+        { roleId2: 1 }))
+      .eq($, null);
 
     // Execution of a single statement results in nothing.
     await $check`execute() with a single statement`
