@@ -3,7 +3,7 @@
 
 import { addCheck } from '@axel669/aegis';
 import { parse, show } from '../lib/sqlite.js';
-import { SQLStatement } from '../lib/statement.js';
+import { isSQLStatement } from '../lib/statement.js';
 import fs from 'fs-jetpack';
 
 
@@ -18,7 +18,7 @@ import fs from 'fs-jetpack';
 export function initializeD1Checks() {
   // Check that a value is an instance of SQLStatement
   addCheck.value.isStatement(
-    source => source instanceof SQLStatement
+    source => isSQLStatement(source)
   );
 
   // Assuming that a value is a SQLStatement, verify it's bindMetadata.style property.

@@ -22,6 +22,7 @@ export const config = {
     "test/package.test.js",
     "test/unused_imports.test.js",
     "test/sqlparser.test.js",
+    "test/statement_identity.test.js",
     "test/compiler.test.js",
     "test/raw_query.test.js",
     "test/fetch.test.js",
