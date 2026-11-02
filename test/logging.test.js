@@ -67,6 +67,57 @@ export default Collection`Query Logging`({
 
   /****************************************************************************/
 
+  /****************************************************************************/
+
+  /* A result object with no results array at all is not something a binding
+   * produces, but the shape turns up in stand-ins, and treating it as a failure
+   * would throw after the query itself had already succeeded. */
+  "Missing Result Set": async ({ runScope: ctx }) => {
+    let value;
+    const lines = await captureLogs(async () => {
+      value = await dbFetch(resultDb({
+        success: true,
+        meta: { duration: 1, last_row_id: 2 },
+      }), 'log_test_three', 'SELECT 1;');
+    });
+
+    $check`missing result set is returned as no rows`
+      .value(value)
+      .isArray()
+      .eq($.length, 0);
+
+    $check`missing result set is logged as a null size`
+      .value((lines[0] ?? '').includes('resultSize=null'))
+      .eq($, true);
+  },
+
+
+  /****************************************************************************/
+
+  /* The guards in the library are written against the real shape of a result,
+   * so the real shape is recorded here: a statement that writes rows still
+   * returns an empty results array rather than a null one. */
+  "Write Statement Result": async ({ runScope: ctx }) => {
+    let value;
+    const lines = await captureLogs(async () => {
+      value = await dbFetch(ctx.env.DB, 'log_insert', `
+        INSERT INTO Flags (id, isActive, is_visible, isEnabled, isCount)
+        VALUES (777, 1, 0, NULL, 1);`);
+    });
+
+    $check`insert returns an empty result set`
+      .value(value)
+      .isArray()
+      .eq($.length, 0);
+
+    $check`insert logs an empty result size`
+      .value((lines[0] ?? '').includes('resultSize=0'))
+      .eq($, true);
+  },
+
+
+  /****************************************************************************/
+
   /* A complete meta object must still be logged in full. */
   "Complete Result Metadata": async ({ runScope: ctx }) => {
     const lines = await captureLogs(() => dbFetch(resultDb({
