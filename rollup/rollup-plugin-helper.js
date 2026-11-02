@@ -7,19 +7,27 @@ import { SQLStatement, SQLBindError, mapBinds } from '@odatnurd/d1-query';
 /******************************************************************************/
 
 
-/* A cache of statements that have been prepared; the primary key here is the
- * DB that the statement was prepared for. We're using a weak key here, even
- * though in D1 the DB context should never go away while the worker is
- * actively running.
+/* A cache of the statements that have been prepared, keyed on the database
+ * handle they were prepared for. The key is weak, so the cache for a handle
+ * goes away with the handle once nothing else holds it.
  *
- * Values in here are maps that are keyed on the processed SQL objects. */
+ * A prepared D1 statement belongs to the handle that created it and cannot be
+ * carried over to another one, and a Worker gets a new handle for each request,
+ * so the statements are prepared again on the next request rather than re-used
+ * across requests. That is one db.prepare() per statement per request and no
+ * more: the SQL was parsed and its bind arguments rewritten at build time, and
+ * none of that work happens here.
+ *
+ * The value is a map keyed on the processed SQL that came from an imported
+ * file, which the generated module creates once, so repeated calls in one
+ * request get the same statements back. */
 const dbCache = new WeakMap();
 
 
 /******************************************************************************/
 
 
-/* Fo the work of preparing the SQL that was imported and converted so that it
+/* Do the work of preparing the SQL that was imported and converted so that it
  * can be executed on the given database.
  *
  * This utilizes the cache so that it only prepares statements if it has never

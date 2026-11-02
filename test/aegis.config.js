@@ -30,6 +30,7 @@ export const config = {
     "test/aegis_helpers.test.js",
     "test/rollup.test.js",
     "test/rollup_plugin_path.test.js",
+    "test/rollup_helper.test.js",
   ],
   hooks: {
     setup: async (ctx) => {
