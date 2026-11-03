@@ -292,6 +292,13 @@ When no `binds` are provided, the function returns the statement or statements
 that were imported from the SQL, already prepared and ready for further
 execution.
 
+Statements are prepared against the database binding they are handed, and a
+Worker is given a new binding for each request, so a request prepares each
+statement it uses once and then re-uses it for the rest of that request. Nothing
+is re-parsed: the SQL was parsed and its bind arguments were rewritten when the
+bundle was built, so what a later request pays for is `D1` preparing SQL that it
+has already been given.
+
 If binds are given and the SQL contains a single statement that is bindable,
 the call can contain any number of `binds` that are suitable for the statement,
 and the result of the call is one copy of the statement for each bind that was
@@ -363,6 +370,46 @@ const result = await fetch(ctx.env.DB, 'batch_insert_users',
 ```
 
 
+## Public API
+
+The supported surface of the package is:
+
+* the database helpers documented above, and the `SQLStatement` instances they
+  return and accept back;
+* `SQLSyntaxError` and `SQLBindError`, the error types the library raises, so
+  that a failure can be told apart from one of your own;
+* `BIND_STYLE_ANONYMOUS`, `BIND_STYLE_NUMBERED` and `BIND_STYLE_NAMED`, which
+  name the bind styles reported in a statement's `bindMetadata.style`.
+
+A `SQLStatement` is deliberately opaque. Hand it back to the library and it
+works. What is inside it is an implementation detail, and `bindMetadata` is
+there for reporting and for the test helpers rather than for reading the
+compiled SQL out of.
+
+`processSQLString()` and `mapBinds()` are exported as well, because the Rollup
+plugin uses them. They are not documented here, they may change in any release,
+and no compatibility promise is made for them: call them if you like, but
+support for code that does may be a polite "thanks, but no thanks".
+
+```js
+import { SQLSyntaxError, SQLBindError } from '@odatnurd/d1-query';
+
+try {
+  await dbFetch(env.DB, 'insert_user',
+    'INSERT INTO Users (name) VALUES (:name);',
+    { name: 'bob' });
+} catch (err) {
+  if (err instanceof SQLBindError) {
+    // the bind values do not match the statement
+  } else if (err instanceof SQLSyntaxError) {
+    // the SQL could not be understood
+  } else {
+    throw err;
+  }
+}
+```
+
+
 ## Testing Utilities (Optional)
 
 This package includes an optional set of helpers to facilitate testing your own
@@ -400,6 +447,17 @@ An async function that takes a database context from a Cloudflare worker and
 either the filename of a single SQL file, or an array of SQL filenames. It will
 read and execute each SQL file given in turn, raising an error if an error
 occurs; a file that cannot be read is reported by name.
+
+Each file is split into its statements, and the statements are then executed one
+at a time in the order they appear, logged as they run. Compound statements are
+kept whole, so a `CREATE TRIGGER ... BEGIN ... END;` is executed as a single
+statement even though its body contains semicolons, and the comments in the file
+are not executed.
+
+There is no transaction wrapped around the file, or around the set of files, so
+a file that fails partway through leaves the database partly set up. If the
+setup has to be all or nothing, wrap the call in a transaction or use a single
+file per step.
 
 ---
 
