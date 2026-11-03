@@ -21,6 +21,6 @@ jobs:
           GH_TOKEN: ${{ secrets.ASTRO_SITE_TRIGGER_TOKEN }}
         run: |
           gh workflow run deploy_astro.yml \
-            --repo OdatNurd/astro-homepage \
+            --repo OdatNurd/odatnurd.net \
             --ref published \
             -f clear_npm_cache=true
