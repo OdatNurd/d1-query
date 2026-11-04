@@ -5,22 +5,24 @@ on:
     workflows: ["Publish to NPMJS"]
     types:
       - completed
+  workflow_dispatch:
+    inputs:
+      package-version:
+        description: 'The published tag to wait for, e.g. v0.3.4'
+        required: true
+        type: string
 
 jobs:
-  trigger-astro:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - name: Allow NPM Registry to Settle
-        # Give npmjs a chance to index the new package before we kick off the
-        # build so that the new version is picked up.
-        run: sleep 60
-
-      - name: Trigger Astro Site Rebuild
-        env:
-          GH_TOKEN: ${{ secrets.ASTRO_SITE_TRIGGER_TOKEN }}
-        run: |
-          gh workflow run deploy_astro.yml \
-            --repo OdatNurd/odatnurd.net \
-            --ref published \
-            -f clear_npm_cache=true
+  update-site:
+    # The publish workflow runs from a tag for normal releases. Manual publish
+    # runs need to trigger this workflow manually with the version.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch || '', 'v')) }}
+    uses: odatnurd/github-workflows/.github/workflows/update-site.yaml@update-site-v1.0.0
+    with:
+      package-name: '@odatnurd/d1-query'
+      package-version: ${{ github.event_name == 'workflow_dispatch' && inputs.package-version || github.event.workflow_run.head_branch }}
+      poll-interval-seconds: 10
+      poll-timeout-seconds: 300
+      clear-npm-cache: true
+    secrets:
+      site-trigger-token: ${{ secrets.ASTRO_SITE_TRIGGER_TOKEN }}
