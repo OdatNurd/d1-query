@@ -433,10 +433,13 @@ The `@odatnurd/d1-query/aegis` module exports the following helper functions:
 ### Helper Functions
 
 ```javascript
-export function initializeD1Checks() {}
+export function initializeD1Checks(aegisApi = aegis) {}
 ```
-Registers all [custom checks](#custom-checks) with Aegis. This should be called
-once at the top of your `aegis.config.js` file.
+Registers all [custom checks](#custom-checks) with Aegis. Call it in each test
+file, or in a module imported by each test file: Aegis 0.4 runs test files in
+isolated worker threads, and assertion registrations are per worker. The
+optional `aegisApi` argument lets a linked or duplicated copy of
+`@axel669/aegis` register the checks on the instance the test file uses.
 
 ---
 
@@ -463,52 +466,64 @@ file per step.
 
 ### Configuration
 
-You can import the helper functions into your `aegis.config.js` file to easily
-set up a test environment, optionally also populating one or more SQL files into
-the database first in order to set up testing.
+Aegis 0.4 no longer supports setup and teardown hooks in `aegis.config.js`.
+List the files there, then declare the database setup as `aegis.setup` entries
+in each test file (or in a shared module that the file imports).
+
+Each file gets its own Miniflare D1 instance, so tests are isolated instead of
+sharing one database across the whole run.
 
 **Example `aegis.config.js`:**
 
 ```js
+export const files = [
+  "test/**/*.test.js",
+];
+```
+
+**Example test file setup:**
+
+```js
+import { aegis } from '@axel669/aegis';
 import {
   initializeCustomChecks,
   aegisSetup,
   aegisTeardown
 } from '@odatnurd/cf-aegis';
-
 import {
   initializeD1Checks,
   execSQLFiles
 } from '@odatnurd/d1-query/aegis';
 
-initializeCustomChecks();
-initializeD1Checks();
+initializeCustomChecks(aegis);
+initializeD1Checks(aegis);
 
-export const config = {
-    files: [
-        "test/**/*.test.js",
-    ],
-    hooks: {
-        async setup(ctx) {
-          await aegisSetup(ctx, {
-            d1_databases: [
-              {
-                binding: 'DB',
-                database_name: 'test-db',
-                database_id: 'test-db-id'
-              }
-            ]
-          });
-          await execSQLFiles(ctx.env.DB, 'test/setup.sql')
-        },
+aegis.setup(async (state) => {
+  state.ctx = {};
+  await aegisSetup(state.ctx, {
+    d1_databases: [
+      {
+        binding: 'DB',
+        database_name: 'test-db',
+        database_id: 'test-db-id'
+      }
+    ]
+  });
+  await execSQLFiles(state.ctx.env.DB, 'test/setup.sql');
+});
 
-        async teardown(ctx) {
-            await aegisTeardown(ctx);
-        },
-    },
-    failAction: "afterSection",
-}
+aegis.test`...`(async (state) => {
+  const ctx = state.ctx;
+  // tests
+});
+
+aegis.setup(async (state) => {
+  await aegisTeardown(state.ctx);
+});
 ```
+
+Setup entries run in declaration order, so the final `aegis.setup` acts as the
+teardown for the file.
 
 
 ### Custom Checks
@@ -516,14 +531,14 @@ export const config = {
 The `initializeD1Checks()` function registers several custom checks with Aegis
 to simplify testing database-related logic.
 
-* `.isStatement($)`: A shortcut to check if a value is an instance of
+* `$.isStatement(value)`: A shortcut to check if a value is an instance of
   `SQLStatement`.
-* `.bindType($, type)`: Assumes the value is an `SQLStatement` and checks that
-  its `bindMetadata.style` property matches the provided string
+* `$.bindType(value, type)`: Assumes the value is an `SQLStatement` and checks
+  that its `bindMetadata.style` property matches the provided string
   (e.g., `'anonymous'`, `'numbered'`, `'named'`).
-* `.argCount($, count)`: Assumes the value is an `SQLStatement` and checks that
-  its `bindMetadata.argCount` property matches the provided number.
-* `.argNames($, names)`: Assumes the value is an `SQLStatement` with named
+* `$.argCount(value, count)`: Assumes the value is an `SQLStatement` and checks
+  that its `bindMetadata.argCount` property matches the provided number.
+* `$.argNames(value, names)`: Assumes the value is an `SQLStatement` with named
   parameters.
     * If `names` is an **array**, it validates that the statement's bind
       parameters are exactly those in the array, regardless of order.

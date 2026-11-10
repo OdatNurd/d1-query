@@ -1,12 +1,13 @@
 /******************************************************************************/
 
 
-import { addCheck } from '@axel669/aegis';
+import { aegis } from '@axel669/aegis';
 import { isSQLStatement, renderSQLStatements } from '../lib/statement.js';
 import fs from 'fs-jetpack';
 
 
 /******************************************************************************/
+
 
 /*
  * Initializes some custom Aegis checks that make testing of queries and other
@@ -14,30 +15,39 @@ import fs from 'fs-jetpack';
  *
  * This is entirely optional.
  */
-export function initializeD1Checks() {
+export function initializeD1Checks(aegisApi = aegis) {
   // Check that a value is an instance of SQLStatement
-  addCheck.value.isStatement(
-    source => isSQLStatement(source)
-  );
+  aegisApi.createAssertion({
+    name: 'isStatement',
+    type: 'value',
+    run: source => isSQLStatement(source)
+  });
 
-  // Assuming that a value is a SQLStatement, verify it's bindMetadata.style property.
-  addCheck.value.bindType(
-    (source, expectedType) => source?.bindMetadata?.style === expectedType
-  );
+  // Assuming that a value is a SQLStatement, verify it's bindMetadata.style
+  // property.
+  aegisApi.createAssertion({
+    name: 'bindType',
+    type: 'value',
+    run: (source, expectedType) => source?.bindMetadata?.style === expectedType
+  });
 
   // Assuming that a value is a SQLStatement, verify its bindMetadata.argCount
   // property.
-  addCheck.value.argCount(
-    (source, expectedCount) => source?.bindMetadata?.argCount === expectedCount
-  );
+  aegisApi.createAssertion({
+    name: 'argCount',
+    type: 'value',
+    run: (source, expectedCount) => source?.bindMetadata?.argCount === expectedCount
+  });
 
   // Assuming that a value is a SQLStatement with named bind arguments, verify:
   // - If expectedNames is an array, it checks that the names of the bind
   //   parameters match exactly the names in the array (but in any order)
   // - If expectedNames is an object, it checks that the names and their
   //   index positions match exactly.
-  addCheck.value.argNames(
-    (source, expectedNames) => {
+  aegisApi.createAssertion({
+    name: 'argNames',
+    type: 'value',
+    run: (source, expectedNames) => {
       const params = source?.bindMetadata?.params;
       if (params === undefined) {
         return false;
@@ -46,8 +56,8 @@ export function initializeD1Checks() {
       const paramKeys = Object.keys(params);
 
       // When the input is an array, the names in the array must exactly match
-      // against every named bind, although we do not verify the order that
-      // they appear.
+      // against every named bind, although we do not verify the order that they
+      // appear.
       if (Array.isArray(expectedNames) === true) {
         if (paramKeys.length !== expectedNames.length) {
           return false;
@@ -69,7 +79,7 @@ export function initializeD1Checks() {
 
       return false;
     }
-  );
+  });
 }
 
 

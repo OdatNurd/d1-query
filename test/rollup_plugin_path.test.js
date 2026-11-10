@@ -1,10 +1,16 @@
-import { Collection, $check, $ } from "@axel669/aegis";
+import { aegis, $ } from "@axel669/aegis";
 
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import fs from 'fs-jetpack';
 import { rollup } from 'rollup';
+
+
+/******************************************************************************/
+
+
+export const name = "Rollup Plugin Paths";
 
 
 /******************************************************************************/
@@ -61,32 +67,30 @@ async function buildWithStagedPlugin(dir) {
 /******************************************************************************/
 
 
-export default Collection`Rollup Plugin Paths`({
-  /* The generated module imports the helper by an absolute path that the plugin
-   * derives from its own location. A pathname taken straight from a file URL is
-   * percent encoded, so a space in the install path produces a path that does
-   * not exist and the build fails to resolve it. */
-  "Paths With Spaces": async ({ runScope: ctx }) => {
-    let code = null;
-    let error = null;
+/* The generated module imports the helper by an absolute path that the plugin
+ * derives from its own location. A pathname taken straight from a file URL is
+ * percent encoded, so a space in the install path produces a path that does
+ * not exist and the build fails to resolve it. */
+aegis.test`Paths With Spaces`(async () => {
+  let code = null;
+  let error = null;
 
-    stagePluginIn(SPACE_PATH);
-    try {
-      code = await buildWithStagedPlugin(SPACE_PATH);
-    } catch (err) {
-      error = err;
-    } finally {
-      fs.remove(SPACE_PATH);
-    }
+  stagePluginIn(SPACE_PATH);
+  try {
+    code = await buildWithStagedPlugin(SPACE_PATH);
+  } catch (err) {
+    error = err;
+  } finally {
+    fs.remove(SPACE_PATH);
+  }
 
-    $check`plugin builds when its path contains a space`
-      .value(error)
-      .eq($, null);
+  $.check`plugin builds when its path contains a space`(
+    $.eq(error, null)
+  );
 
-    $check`generated module does not reference a percent encoded path`
-      .value(code ?? '')
-      .eq($.includes('%20'), false);
-  },
+  $.check`generated module does not reference a percent encoded path`(
+    $.eq((code ?? '').includes('%20'), false)
+  );
 });
 
 

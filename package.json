@@ -20,7 +20,7 @@
   "scripts": {
     "build:vendor": "rollup -c rollup.vendor.config.js",
     "pretest": "pnpm run build:vendor",
-    "test": "aegis test/aegis.config.js",
+    "test": "aegis -c test/aegis.config.js",
     "prepublishOnly": "pnpm run build:vendor"
   },
   "files": [
@@ -34,8 +34,8 @@
     "d1"
   ],
   "devDependencies": {
-    "@axel669/aegis": "^0.3.1",
-    "@odatnurd/cf-aegis": "^0.1.12",
+    "@axel669/aegis": "^0.4.0",
+    "@odatnurd/cf-aegis": "^0.2.0",
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.2",
@@ -45,8 +45,8 @@
     "sql-parser-cst": "^0.44.0"
   },
   "peerDependencies": {
-    "@axel669/aegis": "^0.3.1",
-    "@odatnurd/cf-aegis": "^0.1.12",
+    "@axel669/aegis": "^0.4.0",
+    "@odatnurd/cf-aegis": "^0.2.0",
     "fs-jetpack": "^5.1.0",
     "miniflare": "^4.20260730.0"
   },
@@ -64,5 +64,5 @@
       "optional": true
     }
   },
-  "packageManager": "pnpm@11.6.0"
+  "packageManager": "pnpm@11.28.11"
 }

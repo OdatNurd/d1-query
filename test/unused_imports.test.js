@@ -1,6 +1,7 @@
-import { Collection, $check, $ } from "@axel669/aegis";
+import { aegis, $ } from "@axel669/aegis";
 
 import fs from 'fs-jetpack';
+import "./aegis_setup.js";
 
 
 /******************************************************************************/
@@ -59,26 +60,27 @@ function unusedImports(source) {
 /******************************************************************************/
 
 
-export default Collection`Source Hygiene`({
-  /* An import that is never used is dead weight in the module and, in the case
-   * of a module with side effects, a dependency that is pulled in for no good
-   * reason. */
-  "Unused Imports": ({ runScope: ctx }) => {
-    const found = [];
+export const name = "Source Hygiene";
 
-    for (const file of SOURCE_FILES) {
-      const source = fs.read(file, 'utf8');
 
-      for (const name of unusedImports(source)) {
-        found.push(`${file}: ${name}`);
-      }
+/******************************************************************************/
+
+
+aegis.test`Unused Imports`(() => {
+  const found = [];
+
+  for (const file of SOURCE_FILES) {
+    const source = fs.read(file, 'utf8');
+
+    for (const name of unusedImports(source)) {
+      found.push(`${file}: ${name}`);
     }
+  }
 
-    $check`no module imports a name it does not use`
-      .value(found)
-      .isArray()
-      .eq($.length, 0);
-  },
+  $.check`no module imports a name it does not use`(
+    $.isArray(found),
+    $.eq(found.length, 0)
+  );
 });
 
 
