@@ -15,10 +15,13 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    uses: odatnurd/github-workflows/.github/workflows/npm-publish.yaml@npm-publish-v1.0.4
+    uses: odatnurd/github-workflows/.github/workflows/npm-publish.yaml@npm-publish-v2.0.0
     with:
       node-version: 24
       package-version: ${{ (github.event_name == 'workflow_dispatch' && inputs.tag) || github.ref_name }}
       create-release: true
       test-script: 'test'
-      build-script: 'build:vendor'
+      # We don't need to explicitly build becaue the test will build on its own
+      # to perform the tests, and the actual publish action will force a safety
+      # build.
+      #build-script: 'build:vendor'

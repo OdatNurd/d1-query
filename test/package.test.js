@@ -86,14 +86,16 @@ aegis.test`Peer Dependencies`(() => {
 
 
 aegis.test`Build Scripts`(() => {
+  const cachedBuild = pkg.scripts?.['build:vendor:if-needed'] ?? null;
   const pretest = pkg.scripts?.pretest ?? null;
   const prepublishOnly = pkg.scripts?.prepublishOnly ?? null;
 
-  /* The vendored SQL parser is a build artifact that is not committed, so the
-   * build has to run before anything tries to test or publish the package. */
-  $.check`tests build the vendored parser first`(
-    $.neq(pretest, null),
-    $.eq(pretest.includes('build:vendor'), true)
+  /* The vendored SQL parser is a build artifact that is not committed. Tests
+   * use the guard so unchanged inputs skip the build; publishing still forces
+   * a fresh build. */
+  $.check`tests use the cached vendor build`(
+    $.eq(cachedBuild, 'node tools/ensure-vendor.js'),
+    $.eq(pretest, 'pnpm run build:vendor:if-needed')
   );
 
   $.check`publishing builds the vendored parser first`(

@@ -19,7 +19,8 @@
   },
   "scripts": {
     "build:vendor": "rollup -c rollup.vendor.config.js",
-    "pretest": "pnpm run build:vendor",
+    "build:vendor:if-needed": "node tools/ensure-vendor.js",
+    "pretest": "pnpm run build:vendor:if-needed",
     "test": "aegis -c test/aegis.config.js",
     "prepublishOnly": "pnpm run build:vendor"
   },
